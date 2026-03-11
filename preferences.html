@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Schedule Preferences Survey</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a14;--bg2:#14142a;--bg3:#1a1a2e;--border:#2a2a40;
+  --text:#e0e0f0;--text2:#8888aa;--text3:#6666aa;--accent:#3ba4e0;
+  --green:#12b886;--red:#ef4444;--warn:#fbbf24;
+  --radius:12px;--radius-sm:10px;
+}
+html{font-size:16px}
+body{
+  background:linear-gradient(180deg,var(--bg) 0%,#0e0e1a 50%,#12121e 100%);
+  color:var(--text);font-family:'SF Pro Display',-apple-system,'Segoe UI',sans-serif;
+  min-height:100vh;min-height:100dvh;
+  -webkit-tap-highlight-color:transparent;
+}
+.container{max-width:600px;margin:0 auto;padding:20px 16px 40px}
+.tag{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+h1{font-size:24px;font-weight:800;color:#f0f4fa;line-height:1.15;letter-spacing:-0.5px}
+h2{font-size:16px;font-weight:700;color:#c0c8e0;margin-bottom:12px}
+h3{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+p{font-size:14px;line-height:1.5;color:var(--text2)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:14px 28px;border-radius:var(--radius-sm);border:none;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  min-height:48px;min-width:48px;
+  font-family:inherit;
+}
+.btn-primary{background:linear-gradient(135deg,#1b6ca8,#3ba4e0);color:#fff}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-outline{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn-sm{padding:10px 16px;font-size:13px;min-height:44px}
+.btn-block{display:flex;width:100%}
+
+/* Progress bar */
+.progress-wrap{margin-bottom:20px}
+.progress-steps{display:flex;gap:4px;margin-bottom:6px}
+.progress-step{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s}
+.progress-step.done{background:var(--accent)}
+.progress-step.active{background:var(--green)}
+.progress-label{font-size:11px;color:var(--text3)}
+
+/* Form controls */
+.field{margin-bottom:20px}
+.field-label{display:block;font-size:13px;font-weight:600;color:#c0c8e0;margin-bottom:8px}
+.slider-wrap{display:flex;align-items:center;gap:12px}
+.slider-wrap input[type=range]{flex:1;-webkit-appearance:none;height:6px;border-radius:3px;background:var(--border);outline:none}
+.slider-wrap input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--bg)}
+.slider-wrap input[type=range]::-moz-range-thumb{width:28px;height:28px;border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid var(--bg)}
+.slider-val{min-width:36px;text-align:center;font-size:20px;font-weight:800;color:#f0f4fa}
+
+/* Day buttons */
+.day-row{display:flex;flex-wrap:wrap;gap:8px}
+.day-btn{
+  padding:12px 16px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);color:var(--text2);font-size:13px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;min-width:48px;text-align:center;
+  font-family:inherit;
+}
+.day-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+.day-btn.disabled{opacity:0.25;cursor:not-allowed}
+
+/* Rank list */
+.rank-list{display:flex;flex-direction:column;gap:6px}
+.rank-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:12px 14px;cursor:grab;touch-action:none;user-select:none;
+  transition:border-color 0.15s,transform 0.15s;
+}
+.rank-item.dragging{opacity:0.5;border-color:var(--accent)}
+.rank-item .rank-num{font-size:14px;font-weight:800;color:var(--accent);min-width:20px}
+.rank-item .rank-label{font-size:14px;font-weight:600;color:var(--text)}
+.rank-item .rank-arrows{display:flex;flex-direction:column;gap:4px;margin-left:auto}
+.rank-item .rank-arrows button{
+  background:var(--bg2);border:1px solid var(--border);color:var(--accent);cursor:pointer;font-size:18px;font-weight:700;
+  padding:4px 10px;line-height:1;min-height:34px;min-width:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+}
+.rank-item .rank-arrows button:active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Select dropdown */
+select{
+  width:100%;padding:14px 12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  font-size:14px;font-family:inherit;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238888aa' fill='none' stroke-width='2'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+}
+select:focus{outline:none;border-color:var(--accent)}
+option{background:var(--bg);color:var(--text)}
+
+/* Text input */
+input[type=number],textarea{
+  width:100%;padding:12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  font-size:14px;font-family:inherit;
+}
+textarea{min-height:80px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+
+/* Commute input group */
+.commute-row{
+  display:flex;align-items:center;gap:12px;margin-bottom:10px;
+}
+.commute-row .hosp-label{font-size:13px;font-weight:600;color:var(--text);min-width:50px}
+.commute-row input{max-width:100px;text-align:center}
+.commute-row .unit{font-size:12px;color:var(--text3)}
+
+/* Swap pills / single-select options */
+.swap-options{display:flex;flex-direction:column;gap:8px}
+.swap-opt{
+  display:flex;align-items:center;gap:12px;
+  padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);cursor:pointer;transition:all 0.15s;
+}
+.swap-opt.selected{border-color:var(--accent);background:#0d1b2a}
+.swap-opt .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.swap-opt.selected .radio{border-color:var(--accent)}
+.swap-opt.selected .radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.swap-opt .swap-label{font-size:14px;font-weight:600;color:var(--text)}
+
+/* 3-point button row */
+.three-btn-row{display:flex;gap:6px}
+.three-btn{
+  flex:1;padding:10px 6px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all 0.15s;text-align:center;min-height:44px;
+  font-family:inherit;
+}
+.three-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Review section */
+.review-section{margin-bottom:16px}
+.review-section .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.review-section .section-head h3{margin:0}
+.review-section .edit-link{font-size:12px;color:var(--accent);cursor:pointer;text-decoration:none;min-height:44px;display:flex;align-items:center}
+.review-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #1a1a30}
+.review-row .rlabel{color:var(--text2)}
+.review-row .rvalue{color:var(--text);font-weight:600;text-align:right;max-width:60%}
+
+/* Code box */
+.code-box{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:12px;
+  color:var(--green);word-break:break-all;max-height:200px;overflow-y:auto;
+  margin-bottom:12px;
+}
+.copied-msg{color:var(--green);font-size:13px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px}
+
+/* Screens */
+.screen{display:none;animation:fadeIn 0.25s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Holiday rank */
+.holiday-rank{display:flex;flex-direction:column;gap:6px}
+.holiday-item{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);cursor:pointer;transition:all 0.15s;
+}
+.holiday-item.selected{border-color:var(--accent);background:#0d1b2a}
+.holiday-item .hnum{font-size:14px;font-weight:800;color:var(--accent);min-width:20px}
+.holiday-item .hlabel{font-size:14px;font-weight:600;color:var(--text)}
+
+/* Desirability factor prompt */
+.factor-prompt{font-size:13px;color:var(--text);margin-bottom:8px;line-height:1.4}
+
+/* Section divider */
+.section-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+@media(max-width:400px){
+  .container{padding:16px 12px 32px}
+  h1{font-size:20px}
+  .day-row{gap:6px}
+  .day-btn{padding:10px 12px;font-size:12px;min-width:44px}
+  .three-btn{font-size:11px;padding:8px 4px}
+}
+</style>
+</head>
+<body>
+<div class="container" id="app">
+
+  <!-- Progress Bar -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-steps" id="progressSteps"></div>
+    <div class="progress-label" id="progressLabel"></div>
+  </div>
+
+  <!-- Screen 1: Physician ID -->
+  <div class="screen active" id="screen1">
+    <div class="tag">NOCTURNIST SCHEDULING</div>
+    <h1 style="margin-bottom:8px">Schedule Preferences</h1>
+    <p style="margin-bottom:24px">Help us build the best schedule for our group. Your individual preferences will guide schedule construction. Takes about 5 minutes.</p>
+    <div class="card">
+      <h2>Who are you?</h2>
+      <select id="physicianSelect">
+        <option value="">Select your name...</option>
+      </select>
+      <button class="btn btn-primary btn-block" style="margin-top:16px" id="btnStart" disabled>Continue</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Block Preferences -->
+  <div class="screen" id="screen2">
+    <div class="card">
+      <h2>Block Preferences</h2>
+      <p style="margin-bottom:20px">How do you prefer your on/off schedule blocks?</p>
+
+      <div class="field">
+        <label class="field-label">Preferred nights ON per block</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">3</span>
+          <input type="range" min="3" max="10" value="6" id="nightsOn">
+          <span style="font-size:12px;color:var(--text3)">10</span>
+          <span class="slider-val" id="nightsOnVal">6</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Preferred days OFF per block</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">5</span>
+          <input type="range" min="5" max="14" value="8" id="daysOff">
+          <span style="font-size:12px;color:var(--text3)">14</span>
+          <span class="slider-val" id="daysOffVal">8</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Max consecutive nights you can tolerate</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">3</span>
+          <input type="range" min="3" max="14" value="7" id="maxConsec">
+          <span style="font-size:12px;color:var(--text3)">14</span>
+          <span class="slider-val" id="maxConsecVal">7</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Minimum off days to recover between blocks</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">3</span>
+          <input type="range" min="3" max="14" value="5" id="minRecovery">
+          <span style="font-size:12px;color:var(--text3)">14</span>
+          <span class="slider-val" id="minRecoveryVal">5</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(1)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="goScreen(3)">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Day & Time Preferences -->
+  <div class="screen" id="screen3">
+    <div class="card">
+      <h2>Day & Time Preferences</h2>
+
+      <div class="field">
+        <label class="field-label">Most desired block start day</label>
+        <div class="day-row" id="mostDayRow"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Least desired block start day</label>
+        <div class="day-row" id="leastDayRow"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Rank start times (most to least desirable)</label>
+        <p style="font-size:12px;margin-bottom:8px">Use the <span style="color:var(--accent);font-weight:600">&#9650; &#9660; arrows</span> to reorder rankings.</p>
+        <div class="rank-list" id="startTimeRank"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Rank end times (most to least desirable)</label>
+        <p style="font-size:12px;margin-bottom:8px">Use the <span style="color:var(--accent);font-weight:600">&#9650; &#9660; arrows</span> to reorder rankings.</p>
+        <div class="rank-list" id="endTimeRank"></div>
+      </div>
+    </div>
+    <div id="screen3Err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(2)">Back</button>
+      <button class="btn btn-primary" style="flex:1" id="btnScreen3Next" onclick="validateScreen3()">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 4: Location Preferences -->
+  <div class="screen" id="screen4">
+    <div class="card">
+      <h2>Location Preferences</h2>
+
+      <div class="field">
+        <label class="field-label">Your top 3 hospitals</label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px;font-weight:800;color:var(--accent);min-width:24px">1st</span>
+            <select id="hosp1" class="hosp-select" style="flex:1"></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px;font-weight:800;color:var(--accent);min-width:24px">2nd</span>
+            <select id="hosp2" class="hosp-select" style="flex:1"></select>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:14px;font-weight:800;color:var(--accent);min-width:24px">3rd</span>
+            <select id="hosp3" class="hosp-select" style="flex:1"></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">1 alternate hospital (if top 3 unavailable)</label>
+        <select id="hospAlt"></select>
+      </div>
+
+      <div class="field" id="pctSection" style="display:none">
+        <label class="field-label">Desired percentage split across your top 3</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Must total 100%</p>
+        <div id="pctInputs"></div>
+        <div id="pctTotal" style="font-size:13px;font-weight:700;margin-top:6px;color:var(--text2)"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Commute time to each hospital (minutes)</label>
+        <div id="commuteInputs"></div>
+      </div>
+    </div>
+    <div id="screen4Err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(3)">Back</button>
+      <button class="btn btn-primary" style="flex:1" id="btnScreen4Next" onclick="validateScreen4()">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 5: Holidays & Availability -->
+  <div class="screen" id="screen5">
+    <div class="card">
+      <h2>Holidays & Availability</h2>
+
+      <div class="field">
+        <label class="field-label">Top 3 holidays you'd most like off (tap in order)</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Christmas & Thanksgiving excluded. Tap 1st choice, then 2nd, then 3rd.</p>
+        <div class="holiday-rank" id="holidayRank"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Planned vacation / blackout dates</label>
+        <textarea id="vacationDates" placeholder="e.g., June 10-17, August 1-5, Dec 20-Jan 2"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Childcare or family obligations on specific days</label>
+        <textarea id="familyObligations" placeholder="e.g., Every Tuesday — school pickup, Fridays — custody schedule"></textarea>
+      </div>
+    </div>
+    <div id="screen5Err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(4)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="validateScreen5()">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 6: Swap & Collaboration (Sections A-D) -->
+  <div class="screen" id="screen6">
+    <div class="card">
+      <h2>Swap & Collaboration</h2>
+
+      <!-- Section A: Swap Willingness -->
+      <div class="field">
+        <label class="field-label">Willingness to swap blocks with colleagues</label>
+        <div class="swap-options" id="swapOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectSwap('yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes — anytime</div>
+          </div>
+          <div class="swap-opt" data-val="conditional" onclick="selectSwap('conditional')">
+            <div class="radio"></div>
+            <div class="swap-label">Conditional — depends on the swap</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectSwap('no')">
+            <div class="radio"></div>
+            <div class="swap-label">No — prefer to keep my schedule fixed</div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Section B: Swap Motivators -->
+      <div class="field">
+        <label class="field-label">Rank what motivates you most in a swap (1 = most important)</label>
+        <p style="font-size:12px;margin-bottom:8px">Use the <span style="color:var(--accent);font-weight:600">&#9650; &#9660; arrows</span> to reorder rankings.</p>
+        <div class="rank-list" id="motivatorRank"></div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Section C: Swap Desirability Factors -->
+      <div class="field">
+        <label class="field-label">Swap desirability factors</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">How much would each factor increase your likelihood of accepting a swap?</p>
+
+        <div style="margin-bottom:14px">
+          <div class="factor-prompt">I'd be <strong>more likely</strong> to accept a swap if it moves me to a <strong>preferred hospital location</strong></div>
+          <div class="three-btn-row" id="desirLoc"></div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="factor-prompt">I'd be <strong>more likely</strong> to accept a swap if it gives me a <strong>preferred start or end time</strong></div>
+          <div class="three-btn-row" id="desirTime"></div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="factor-prompt">I'd be <strong>more likely</strong> to accept a swap if it helps me <strong>avoid a specific day of the week</strong></div>
+          <div class="three-btn-row" id="desirDay"></div>
+        </div>
+        <div style="margin-bottom:14px">
+          <div class="factor-prompt">I'd be <strong>more likely</strong> to accept a swap if it gives me a <strong>longer off-stretch</strong></div>
+          <div class="three-btn-row" id="desirOff"></div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Section D: Swap Constraints -->
+      <div class="field">
+        <label class="field-label">Max additional consecutive nights you'd accept in a swap</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">0</span>
+          <input type="range" min="0" max="5" value="2" id="maxExtraConsec">
+          <span style="font-size:12px;color:var(--text3)">5</span>
+          <span class="slider-val" id="maxExtraConsecVal">2</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Minimum notice needed to consider a swap (days)</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">1</span>
+          <input type="range" min="1" max="30" value="7" id="minNoticeDays">
+          <span style="font-size:12px;color:var(--text3)">30</span>
+          <span class="slider-val" id="minNoticeDaysVal">7</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Hospital flexibility for swaps</label>
+        <div class="swap-options" id="hospFlexOptions">
+          <div class="swap-opt" data-val="same_only" onclick="selectOpt('hospFlexOptions','hospital_flexibility','same_only')">
+            <div class="radio"></div>
+            <div class="swap-label">Same hospital only</div>
+          </div>
+          <div class="swap-opt" data-val="assigned_only" onclick="selectOpt('hospFlexOptions','hospital_flexibility','assigned_only')">
+            <div class="radio"></div>
+            <div class="swap-label">Any of my assigned hospitals</div>
+          </div>
+          <div class="swap-opt" data-val="any" onclick="selectOpt('hospFlexOptions','hospital_flexibility','any')">
+            <div class="radio"></div>
+            <div class="swap-label">Any hospital including ones I'm not usually assigned to</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Willing to pick up an extra shift (not just trade) for premium pay?</label>
+        <div class="swap-options" id="extraShiftOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectOpt('extraShiftOptions','extra_shift_premium','yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes</div>
+          </div>
+          <div class="swap-opt" data-val="maybe" onclick="selectOpt('extraShiftOptions','extra_shift_premium','maybe')">
+            <div class="radio"></div>
+            <div class="swap-label">Maybe — depends on timing</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectOpt('extraShiftOptions','extra_shift_premium','no')">
+            <div class="radio"></div>
+            <div class="swap-label">No</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="screen6Err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(5)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="validateScreen6()">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 7: Block & Weekend Swaps (Sections E-F) -->
+  <div class="screen" id="screen7">
+    <div class="card">
+      <h2>Block & Weekend Swaps</h2>
+
+      <!-- Section E: Block Swaps -->
+      <h3>Block Swaps</h3>
+
+      <div class="field">
+        <label class="field-label">Willing to swap an entire on-block with another physician?</label>
+        <div class="swap-options" id="fullBlockOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectOpt('fullBlockOptions','willing_full_block','yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes — happy to trade full blocks</div>
+          </div>
+          <div class="swap-opt" data-val="maybe" onclick="selectOpt('fullBlockOptions','willing_full_block','maybe')">
+            <div class="radio"></div>
+            <div class="swap-label">Maybe — depends on the details</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectOpt('fullBlockOptions','willing_full_block','no')">
+            <div class="radio"></div>
+            <div class="swap-label">No — I don't want to trade full blocks</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Block trade flexibility</label>
+        <div class="swap-options" id="tradeFlexOptions">
+          <div class="swap-opt" data-val="equal_only" onclick="selectOpt('tradeFlexOptions','trade_flexibility','equal_only')">
+            <div class="radio"></div>
+            <div class="swap-label">Equal length only — I'll only trade my 6 for another 6</div>
+          </div>
+          <div class="swap-opt" data-val="flexible" onclick="selectOpt('tradeFlexOptions','trade_flexibility','flexible')">
+            <div class="radio"></div>
+            <div class="swap-label">Flexible — I'd accept uneven trades (e.g. my 6 for their 7)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Willing to swap a preferred block (e.g. holiday week) in exchange for a less preferred block later?</label>
+        <div class="swap-options" id="prefBlockOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectOpt('prefBlockOptions','preferred_block_trade','yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes — I'll bank a bad block to protect a good one</div>
+          </div>
+          <div class="swap-opt" data-val="maybe" onclick="selectOpt('prefBlockOptions','preferred_block_trade','maybe')">
+            <div class="radio"></div>
+            <div class="swap-label">Maybe — depends on what I'm giving up</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectOpt('prefBlockOptions','preferred_block_trade','no')">
+            <div class="radio"></div>
+            <div class="swap-label">No — I want to keep my assigned blocks as-is</div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Section F: Weekend Swaps -->
+      <h3>Weekend Swaps</h3>
+
+      <div class="field">
+        <label class="field-label">Minimum weekends off per month</label>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">0</span>
+          <input type="range" min="0" max="4" value="1" id="minWeekendsOff">
+          <span style="font-size:12px;color:var(--text3)">4</span>
+          <span class="slider-val" id="minWeekendsOffVal">1</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Willing to work an extra weeknight to get a weekend night off?</label>
+        <div class="swap-options" id="extraWeeknightOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectOpt('extraWeeknightOptions','extra_weeknight_for_weekend','yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes</div>
+          </div>
+          <div class="swap-opt" data-val="maybe" onclick="selectOpt('extraWeeknightOptions','extra_weeknight_for_weekend','maybe')">
+            <div class="radio"></div>
+            <div class="swap-label">Maybe — depends on which weeknight</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectOpt('extraWeeknightOptions','extra_weeknight_for_weekend','no')">
+            <div class="radio"></div>
+            <div class="swap-label">No</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Willing to split a block to get a weekend off?</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">e.g. work Mon-Fri, swap out Sat-Sun, resume Mon</p>
+        <div class="swap-options" id="splitBlockOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectOpt('splitBlockOptions','split_block_for_weekend','yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes — I'd break a block for a weekend off</div>
+          </div>
+          <div class="swap-opt" data-val="maybe" onclick="selectOpt('splitBlockOptions','split_block_for_weekend','maybe')">
+            <div class="radio"></div>
+            <div class="swap-label">Maybe — only for important weekends</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectOpt('splitBlockOptions','split_block_for_weekend','no')">
+            <div class="radio"></div>
+            <div class="swap-label">No — I prefer unbroken blocks</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Rank weekend nights by importance (1 = most important to have off)</label>
+        <p style="font-size:12px;margin-bottom:8px">Use the <span style="color:var(--accent);font-weight:600">&#9650; &#9660; arrows</span> to reorder rankings.</p>
+        <div class="rank-list" id="weekendNightRank"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Would accept a less preferred hospital assignment to get a weekend off?</label>
+        <div class="swap-options" id="worseHospOptions">
+          <div class="swap-opt" data-val="yes" onclick="selectOpt('worseHospOptions','worse_hospital_for_weekend','yes')">
+            <div class="radio"></div>
+            <div class="swap-label">Yes</div>
+          </div>
+          <div class="swap-opt" data-val="maybe" onclick="selectOpt('worseHospOptions','worse_hospital_for_weekend','maybe')">
+            <div class="radio"></div>
+            <div class="swap-label">Maybe — depends on the hospital</div>
+          </div>
+          <div class="swap-opt" data-val="no" onclick="selectOpt('worseHospOptions','worse_hospital_for_weekend','no')">
+            <div class="radio"></div>
+            <div class="swap-label">No</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="screen7Err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(6)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="validateScreen7()">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 8: Review -->
+  <div class="screen" id="screen8">
+    <div class="card">
+      <h2>Review Your Responses</h2>
+      <p style="margin-bottom:16px">Please confirm everything looks correct before submitting.</p>
+      <div id="reviewContent"></div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(7)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="submitSurvey()">Submit</button>
+    </div>
+  </div>
+
+  <!-- Screen 9: Confirmation -->
+  <div class="screen" id="screen9">
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:48px;margin-bottom:8px">&#10003;</div>
+      <h1 style="margin-bottom:4px">Preferences Submitted!</h1>
+      <p>Thank you, <span id="confirmName"></span>.</p>
+    </div>
+    <div class="card">
+      <h3>Your Code</h3>
+      <div class="code-box" id="outputCode"></div>
+      <button class="btn btn-primary btn-block" onclick="copyCode()" id="copyBtn">Copy Code</button>
+      <div class="copied-msg" id="copiedMsg" style="display:none">&#10003; Copied!</div>
+      <div style="margin-top:16px">
+        <a id="mailtoLink" class="btn btn-outline btn-block" style="text-decoration:none">Email to Admin</a>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:var(--text3)">
+        Tap "Email to Admin" to send your preferences. If your email app doesn't open, copy the code above and text/email it to your schedule admin.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// ─── DATA ───
+var PHYSICIANS = [
+  'Bogart','Brittain','Cabanis','Cook','Diamant','Diaz','Dupuis','Farris',
+  'Johnson','Moore','Mulji','Nagy','Nicks','Pitts','Reyes','Roth','Russell','Shipley','Wright'
+];
+
+var HOSPITALS_ALL = ['BEH','GMH','GRMH','HMH','LCH','NGH','OMH'];
+var HOSPITAL_NAMES = {
+  BEH:'Baptist Easley Hospital',GMH:'Greenville Memorial Hospital',
+  GRMH:'Greer Memorial Hospital',HMH:'Hillcrest Memorial Hospital',
+  LCH:'Laurens County Memorial Hospital',NGH:'North Greenville Hospital',
+  OMH:'Oconee Memorial Hospital'
+};
+
+var DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var DAYS_FULL = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+var START_TIMES = ['8 PM','9 PM','10 PM','11 PM'];
+var END_TIMES = ['5 AM','6 AM','7 AM','8 AM'];
+var HOLIDAYS = [
+  'New Year\'s Eve','New Year\'s Day','Easter','Memorial Day',
+  'Independence Day','Labor Day','Halloween','Veterans Day'
+];
+
+var MOTIVATOR_ITEMS = [
+  { key: 'time_off', label: 'Time off (longer or better-timed off-stretches)' },
+  { key: 'location', label: 'Location (preferred hospital assignment)' },
+  { key: 'rhythm', label: 'Schedule rhythm (maintaining consistent on/off pattern)' },
+  { key: 'money', label: 'Money (premium pay for extra coverage)' }
+];
+
+var WEEKEND_NIGHTS = [
+  { key: 'friday', label: 'Friday night' },
+  { key: 'saturday', label: 'Saturday night' },
+  { key: 'sunday', label: 'Sunday night' }
+];
+
+var ADMIN_EMAIL = 'kydiazdo@gmail.com';
+var TOTAL_SCREENS = 9;
+
+// ─── STATE ───
+var currentScreen = 1;
+var state = {
+  physician: '',
+  block: { nights_on: 6, days_off: 8, max_consecutive: 7, min_recovery: 5 },
+  days: { least_desired: '', most_desired: '' },
+  times: { start_rank: START_TIMES.slice(), end_rank: END_TIMES.slice() },
+  locations: { top3: ['','',''], alternate: '', percentages: {}, commute_minutes: {} },
+  holidays: { top3: [] },
+  availability: { vacation_blackout: '', family_obligations: '' },
+  collaboration: {
+    swap_willingness: '',
+    motivator_rank: MOTIVATOR_ITEMS.map(function(m) { return m.key; }),
+    desirability: {
+      preferred_location: '',
+      preferred_time: '',
+      avoid_day: '',
+      longer_off: ''
+    },
+    constraints: {
+      max_extra_consecutive: 2,
+      min_notice_days: 7,
+      hospital_flexibility: '',
+      extra_shift_premium: ''
+    },
+    block_swap: {
+      willing_full_block: '',
+      trade_flexibility: '',
+      preferred_block_trade: ''
+    },
+    weekend: {
+      min_weekends_off_per_month: 1,
+      extra_weeknight_for_weekend: '',
+      split_block_for_weekend: '',
+      weekend_night_rank: WEEKEND_NIGHTS.map(function(w) { return w.key; }),
+      worse_hospital_for_weekend: ''
+    }
+  }
+};
+
+// ─── INIT ───
+function init() {
+  // Populate physician dropdown
+  var sel = document.getElementById('physicianSelect');
+  PHYSICIANS.forEach(function(name) {
+    var opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', function() {
+    state.physician = this.value;
+    document.getElementById('btnStart').disabled = !this.value;
+  });
+  document.getElementById('btnStart').addEventListener('click', function() { goScreen(2); });
+
+  // Sliders — screen 2
+  setupSlider('nightsOn', 'nightsOnVal', function(v) { state.block.nights_on = v; });
+  setupSlider('daysOff', 'daysOffVal', function(v) { state.block.days_off = v; });
+  setupSlider('maxConsec', 'maxConsecVal', function(v) { state.block.max_consecutive = v; });
+  setupSlider('minRecovery', 'minRecoveryVal', function(v) { state.block.min_recovery = v; });
+
+  // Day buttons
+  buildDayButtons('leastDayRow', function(d) { state.days.least_desired = d; updateDayButtons(); });
+  buildDayButtons('mostDayRow', function(d) { state.days.most_desired = d; updateDayButtons(); });
+
+  // Time rankings
+  buildRankList('startTimeRank', START_TIMES.slice(), function(arr) { state.times.start_rank = arr; });
+  buildRankList('endTimeRank', END_TIMES.slice(), function(arr) { state.times.end_rank = arr; });
+
+  // Hospital selects
+  buildHospitalSelects();
+
+  // Holiday rank
+  buildHolidayRank();
+
+  // Screen 6: Motivator ranking
+  buildRankList('motivatorRank', MOTIVATOR_ITEMS.map(function(m) { return m.label; }), function(arr) {
+    state.collaboration.motivator_rank = arr.map(function(label) {
+      for (var i = 0; i < MOTIVATOR_ITEMS.length; i++) {
+        if (MOTIVATOR_ITEMS[i].label === label) return MOTIVATOR_ITEMS[i].key;
+      }
+      return label;
+    });
+  });
+
+  // Screen 6: Desirability 3-point buttons
+  buildThreeBtnRow('desirLoc', function(v) { state.collaboration.desirability.preferred_location = v; });
+  buildThreeBtnRow('desirTime', function(v) { state.collaboration.desirability.preferred_time = v; });
+  buildThreeBtnRow('desirDay', function(v) { state.collaboration.desirability.avoid_day = v; });
+  buildThreeBtnRow('desirOff', function(v) { state.collaboration.desirability.longer_off = v; });
+
+  // Screen 6: Constraint sliders
+  setupSlider('maxExtraConsec', 'maxExtraConsecVal', function(v) { state.collaboration.constraints.max_extra_consecutive = v; });
+  setupSlider('minNoticeDays', 'minNoticeDaysVal', function(v) { state.collaboration.constraints.min_notice_days = v; });
+
+  // Screen 7: Weekend sliders
+  setupSlider('minWeekendsOff', 'minWeekendsOffVal', function(v) { state.collaboration.weekend.min_weekends_off_per_month = v; });
+
+  // Screen 7: Weekend night ranking
+  buildRankList('weekendNightRank', WEEKEND_NIGHTS.map(function(w) { return w.label; }), function(arr) {
+    state.collaboration.weekend.weekend_night_rank = arr.map(function(label) {
+      for (var i = 0; i < WEEKEND_NIGHTS.length; i++) {
+        if (WEEKEND_NIGHTS[i].label === label) return WEEKEND_NIGHTS[i].key;
+      }
+      return label;
+    });
+  });
+}
+
+function setupSlider(inputId, valId, setter) {
+  var input = document.getElementById(inputId);
+  var val = document.getElementById(valId);
+  input.addEventListener('input', function() {
+    val.textContent = this.value;
+    setter(parseInt(this.value));
+  });
+}
+
+// ─── THREE-BUTTON ROW ───
+function buildThreeBtnRow(containerId, onChange) {
+  var container = document.getElementById(containerId);
+  var options = [
+    { val: 'not_at_all', label: 'Not at all' },
+    { val: 'somewhat', label: 'Somewhat' },
+    { val: 'very_much', label: 'Very much' }
+  ];
+  options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'three-btn';
+    btn.textContent = opt.label;
+    btn.dataset.val = opt.val;
+    btn.addEventListener('click', function() {
+      container.querySelectorAll('.three-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      onChange(opt.val);
+    });
+    container.appendChild(btn);
+  });
+}
+
+// ─── DAY BUTTONS ───
+function buildDayButtons(containerId, onSelect) {
+  var container = document.getElementById(containerId);
+  DAYS.forEach(function(d, i) {
+    var btn = document.createElement('button');
+    btn.className = 'day-btn';
+    btn.textContent = d;
+    btn.dataset.day = DAYS_FULL[i];
+    btn.addEventListener('click', function() { onSelect(DAYS_FULL[i]); });
+    container.appendChild(btn);
+  });
+}
+
+function updateDayButtons() {
+  document.querySelectorAll('#leastDayRow .day-btn').forEach(function(btn) {
+    btn.classList.toggle('selected', btn.dataset.day === state.days.least_desired);
+    btn.classList.toggle('disabled', btn.dataset.day === state.days.most_desired);
+  });
+  document.querySelectorAll('#mostDayRow .day-btn').forEach(function(btn) {
+    btn.classList.toggle('selected', btn.dataset.day === state.days.most_desired);
+    btn.classList.toggle('disabled', btn.dataset.day === state.days.least_desired);
+  });
+}
+
+// ─── RANK LIST ───
+function buildRankList(containerId, items, onChange) {
+  var container = document.getElementById(containerId);
+  var order = items.slice();
+
+  function render() {
+    container.innerHTML = '';
+    order.forEach(function(item, idx) {
+      var div = document.createElement('div');
+      div.className = 'rank-item';
+      div.innerHTML = '<span class="rank-num">' + (idx + 1) + '</span>' +
+        '<span class="rank-label">' + item + '</span>' +
+        '<span class="rank-arrows">' +
+        '<button data-dir="up" aria-label="Move up">&#9650;</button>' +
+        '<button data-dir="down" aria-label="Move down">&#9660;</button>' +
+        '</span>';
+      div.querySelector('[data-dir="up"]').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (idx > 0) { var tmp = order[idx - 1]; order[idx - 1] = order[idx]; order[idx] = tmp; onChange(order); render(); }
+      });
+      div.querySelector('[data-dir="down"]').addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (idx < order.length - 1) { var tmp = order[idx]; order[idx] = order[idx + 1]; order[idx + 1] = tmp; onChange(order); render(); }
+      });
+      container.appendChild(div);
+    });
+  }
+  render();
+}
+
+// ─── HOSPITAL SELECTS ───
+function buildHospitalSelects() {
+  ['hosp1','hosp2','hosp3','hospAlt'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    sel.innerHTML = '<option value="">Select...</option>';
+    HOSPITALS_ALL.forEach(function(h) {
+      var opt = document.createElement('option');
+      opt.value = h; opt.textContent = h + ' \u2014 ' + HOSPITAL_NAMES[h];
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', updateHospitalSelections);
+  });
+}
+
+function updateHospitalSelections() {
+  var h1 = document.getElementById('hosp1').value;
+  var h2 = document.getElementById('hosp2').value;
+  var h3 = document.getElementById('hosp3').value;
+  var alt = document.getElementById('hospAlt').value;
+
+  state.locations.top3 = [h1, h2, h3];
+  state.locations.alternate = alt;
+
+  var allSels = ['hosp1','hosp2','hosp3','hospAlt'];
+  allSels.forEach(function(id) {
+    var sel = document.getElementById(id);
+    var others = allSels.filter(function(x) { return x !== id; }).map(function(x) { return document.getElementById(x).value; }).filter(Boolean);
+    Array.from(sel.options).forEach(function(opt) {
+      if (opt.value) opt.disabled = others.indexOf(opt.value) >= 0;
+    });
+  });
+
+  var pctSection = document.getElementById('pctSection');
+  if (h1 && h2 && h3) {
+    pctSection.style.display = '';
+    buildPctInputs();
+  } else {
+    pctSection.style.display = 'none';
+  }
+}
+
+function buildPctInputs() {
+  var container = document.getElementById('pctInputs');
+  container.innerHTML = '';
+  state.locations.percentages = {};
+  state.locations.top3.forEach(function(h) {
+    if (!h) return;
+    var row = document.createElement('div');
+    row.className = 'commute-row';
+    row.innerHTML = '<span class="hosp-label" style="min-width:60px">' + h + '</span>' +
+      '<input type="number" min="0" max="100" placeholder="0" data-pct-hosp="' + h + '">' +
+      '<span class="unit">%</span>';
+    row.querySelector('input').addEventListener('input', function() {
+      state.locations.percentages[h] = parseInt(this.value) || 0;
+      updatePctTotal();
+    });
+    container.appendChild(row);
+  });
+  updatePctTotal();
+}
+
+function updatePctTotal() {
+  var total = Object.values(state.locations.percentages).reduce(function(a, b) { return a + b; }, 0);
+  var el = document.getElementById('pctTotal');
+  if (total === 100) {
+    el.innerHTML = '<span style="color:var(--green)">Total: ' + total + '% &#10003;</span>';
+  } else {
+    el.innerHTML = '<span style="color:' + (total > 100 ? 'var(--red)' : 'var(--text2)') + '">Total: ' + total + '%</span>';
+  }
+}
+
+function buildCommuteInputs() {
+  var container = document.getElementById('commuteInputs');
+  container.innerHTML = '';
+  state.locations.commute_minutes = {};
+  HOSPITALS_ALL.forEach(function(h) {
+    var row = document.createElement('div');
+    row.className = 'commute-row';
+    row.innerHTML = '<span class="hosp-label" style="min-width:60px">' + h + '</span>' +
+      '<input type="number" min="0" max="180" placeholder="0" data-hosp="' + h + '">' +
+      '<span class="unit">min</span>';
+    row.querySelector('input').addEventListener('input', function() {
+      state.locations.commute_minutes[h] = parseInt(this.value) || 0;
+    });
+    container.appendChild(row);
+  });
+}
+
+// ─── HOLIDAY RANK ───
+function buildHolidayRank() {
+  var container = document.getElementById('holidayRank');
+  HOLIDAYS.forEach(function(h) {
+    var div = document.createElement('div');
+    div.className = 'holiday-item';
+    div.dataset.holiday = h;
+    div.innerHTML = '<span class="hnum"></span><span class="hlabel">' + h + '</span>';
+    div.addEventListener('click', function() { toggleHoliday(h); });
+    container.appendChild(div);
+  });
+}
+
+function toggleHoliday(h) {
+  var idx = state.holidays.top3.indexOf(h);
+  if (idx >= 0) {
+    state.holidays.top3.splice(idx, 1);
+  } else if (state.holidays.top3.length < 3) {
+    state.holidays.top3.push(h);
+  }
+  renderHolidays();
+}
+
+function renderHolidays() {
+  document.querySelectorAll('#holidayRank .holiday-item').forEach(function(el) {
+    var h = el.dataset.holiday;
+    var idx = state.holidays.top3.indexOf(h);
+    el.classList.toggle('selected', idx >= 0);
+    el.querySelector('.hnum').textContent = idx >= 0 ? (idx + 1) : '';
+  });
+}
+
+// ─── SWAP / OPTION SELECTION ───
+window.selectSwap = function(val) {
+  state.collaboration.swap_willingness = val;
+  document.querySelectorAll('#swapOptions .swap-opt').forEach(function(el) {
+    el.classList.toggle('selected', el.dataset.val === val);
+  });
+};
+
+// Generic single-select for any swap-options group
+window.selectOpt = function(containerId, stateKey, val) {
+  // Set state based on which section owns this key
+  if (stateKey === 'hospital_flexibility' || stateKey === 'extra_shift_premium') {
+    state.collaboration.constraints[stateKey] = val;
+  } else if (stateKey === 'willing_full_block' || stateKey === 'trade_flexibility' || stateKey === 'preferred_block_trade') {
+    state.collaboration.block_swap[stateKey] = val;
+  } else if (stateKey === 'extra_weeknight_for_weekend' || stateKey === 'split_block_for_weekend' || stateKey === 'worse_hospital_for_weekend') {
+    state.collaboration.weekend[stateKey] = val;
+  }
+  document.querySelectorAll('#' + containerId + ' .swap-opt').forEach(function(el) {
+    el.classList.toggle('selected', el.dataset.val === val);
+  });
+};
+
+// ─── NAVIGATION ───
+window.goScreen = function(n) {
+  if (n === 4) buildCommuteInputs();
+  if (n === 8) buildReview();
+
+  document.querySelectorAll('.screen').forEach(function(el) { el.classList.remove('active'); });
+  document.getElementById('screen' + n).classList.add('active');
+  currentScreen = n;
+  updateProgress();
+  window.scrollTo(0, 0);
+};
+
+function updateProgress() {
+  var wrap = document.getElementById('progressWrap');
+  if (currentScreen >= 2 && currentScreen <= 8) {
+    wrap.style.display = '';
+    var steps = document.getElementById('progressSteps');
+    steps.innerHTML = '';
+    var labels = ['Block','Day/Time','Location','Holidays','Swap','Block/Wknd','Review'];
+    for (var i = 0; i < 7; i++) {
+      var s = document.createElement('div');
+      s.className = 'progress-step';
+      var screenIdx = i + 2; // screens 2-8
+      if (screenIdx < currentScreen) s.classList.add('done');
+      else if (screenIdx === currentScreen) s.classList.add('active');
+      steps.appendChild(s);
+    }
+    document.getElementById('progressLabel').textContent = 'Step ' + (currentScreen - 1) + ' of 7 \u2014 ' + labels[currentScreen - 2];
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+// ─── VALIDATION ───
+window.validateScreen3 = function() {
+  var err = document.getElementById('screen3Err');
+  if (!state.days.least_desired || !state.days.most_desired) {
+    err.textContent = 'Please select both most and least desired block start days.';
+    err.style.display = '';
+    return;
+  }
+  if (state.days.least_desired === state.days.most_desired) {
+    err.textContent = 'Most and least desired start days cannot be the same.';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  goScreen(4);
+};
+
+window.validateScreen4 = function() {
+  var err = document.getElementById('screen4Err');
+  if (!state.locations.top3[0] || !state.locations.top3[1] || !state.locations.top3[2]) {
+    err.textContent = 'Please select all 3 hospital preferences.';
+    err.style.display = '';
+    return;
+  }
+  if (!state.locations.alternate) {
+    err.textContent = 'Please select an alternate hospital.';
+    err.style.display = '';
+    return;
+  }
+  var pctTotal = Object.values(state.locations.percentages).reduce(function(a, b) { return a + b; }, 0);
+  if (pctTotal !== 100) {
+    err.textContent = 'Hospital percentages must total 100% (currently ' + pctTotal + '%).';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  goScreen(5);
+};
+
+window.validateScreen5 = function() {
+  var err = document.getElementById('screen5Err');
+  if (state.holidays.top3.length < 3) {
+    err.textContent = 'Please select your top 3 holidays (' + state.holidays.top3.length + ' of 3 selected).';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  goScreen(6);
+};
+
+window.validateScreen6 = function() {
+  var err = document.getElementById('screen6Err');
+  if (!state.collaboration.swap_willingness) {
+    err.textContent = 'Please select your swap willingness.';
+    err.style.display = '';
+    return;
+  }
+  var d = state.collaboration.desirability;
+  if (!d.preferred_location || !d.preferred_time || !d.avoid_day || !d.longer_off) {
+    err.textContent = 'Please answer all four desirability factor questions.';
+    err.style.display = '';
+    return;
+  }
+  var c = state.collaboration.constraints;
+  if (!c.hospital_flexibility) {
+    err.textContent = 'Please select your hospital flexibility for swaps.';
+    err.style.display = '';
+    return;
+  }
+  if (!c.extra_shift_premium) {
+    err.textContent = 'Please answer the extra shift question.';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  goScreen(7);
+};
+
+window.validateScreen7 = function() {
+  var err = document.getElementById('screen7Err');
+  var bs = state.collaboration.block_swap;
+  if (!bs.willing_full_block) {
+    err.textContent = 'Please answer the full block swap question.';
+    err.style.display = '';
+    return;
+  }
+  if (!bs.trade_flexibility) {
+    err.textContent = 'Please select your block trade flexibility.';
+    err.style.display = '';
+    return;
+  }
+  if (!bs.preferred_block_trade) {
+    err.textContent = 'Please answer the preferred block trade question.';
+    err.style.display = '';
+    return;
+  }
+  var w = state.collaboration.weekend;
+  if (!w.extra_weeknight_for_weekend) {
+    err.textContent = 'Please answer the extra weeknight question.';
+    err.style.display = '';
+    return;
+  }
+  if (!w.split_block_for_weekend) {
+    err.textContent = 'Please answer the split block question.';
+    err.style.display = '';
+    return;
+  }
+  if (!w.worse_hospital_for_weekend) {
+    err.textContent = 'Please answer the hospital trade-off question.';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  goScreen(8);
+};
+
+// ─── REVIEW ───
+function buildReview() {
+  var c = document.getElementById('reviewContent');
+  var swapLabels = { yes: 'Yes \u2014 anytime', conditional: 'Conditional', no: 'No \u2014 fixed schedule' };
+  var threePtLabels = { not_at_all: 'Not at all', somewhat: 'Somewhat', very_much: 'Very much' };
+  var hospFlexLabels = { same_only: 'Same hospital only', assigned_only: 'Assigned hospitals', any: 'Any hospital' };
+  var ymnLabels = { yes: 'Yes', maybe: 'Maybe', no: 'No' };
+  var fullBlockLabels = { yes: 'Yes', maybe: 'Maybe', no: 'No' };
+  var tradeFlexLabels = { equal_only: 'Equal length only', flexible: 'Flexible' };
+  var splitLabels = { yes: 'Yes', maybe: 'Maybe \u2014 important weekends', no: 'No' };
+
+  var motLabels = { time_off: 'Time off', location: 'Location', rhythm: 'Schedule rhythm', money: 'Money' };
+
+  c.innerHTML = '' +
+    reviewSection('Physician', 1, [['Name', state.physician]]) +
+    reviewSection('Block Preferences', 2, [
+      ['Nights on', state.block.nights_on],
+      ['Days off', state.block.days_off],
+      ['Max consecutive', state.block.max_consecutive],
+      ['Min recovery', state.block.min_recovery]
+    ]) +
+    reviewSection('Day & Time', 3, [
+      ['Most desired start day', state.days.most_desired],
+      ['Least desired start day', state.days.least_desired],
+      ['Start time rank', state.times.start_rank.join(' > ')],
+      ['End time rank', state.times.end_rank.join(' > ')]
+    ]) +
+    reviewSection('Location', 4, [
+      ['Top 3', state.locations.top3.join(', ')],
+      ['Alternate', state.locations.alternate],
+      ['Percentages', state.locations.top3.map(function(h) { return h + ': ' + (state.locations.percentages[h] || 0) + '%'; }).join(', ')],
+      ['Commute', Object.entries(state.locations.commute_minutes).filter(function(e) { return e[1] > 0; }).map(function(e) { return e[0] + ': ' + e[1] + ' min'; }).join(', ') || 'Not entered']
+    ]) +
+    reviewSection('Holidays', 5, [
+      ['Top 3', state.holidays.top3.join(', ')],
+      ['Vacation', state.availability.vacation_blackout || 'None'],
+      ['Family', state.availability.family_obligations || 'None']
+    ]) +
+    reviewSection('Swap & Collaboration', 6, [
+      ['Swap willingness', swapLabels[state.collaboration.swap_willingness] || ''],
+      ['Motivator rank', state.collaboration.motivator_rank.map(function(k) { return motLabels[k] || k; }).join(' > ')],
+      ['Location desirability', threePtLabels[state.collaboration.desirability.preferred_location] || ''],
+      ['Time desirability', threePtLabels[state.collaboration.desirability.preferred_time] || ''],
+      ['Avoid day desirability', threePtLabels[state.collaboration.desirability.avoid_day] || ''],
+      ['Longer off desirability', threePtLabels[state.collaboration.desirability.longer_off] || ''],
+      ['Max extra consecutive', state.collaboration.constraints.max_extra_consecutive],
+      ['Min notice days', state.collaboration.constraints.min_notice_days],
+      ['Hospital flexibility', hospFlexLabels[state.collaboration.constraints.hospital_flexibility] || ''],
+      ['Extra shift for premium', ymnLabels[state.collaboration.constraints.extra_shift_premium] || '']
+    ]) +
+    reviewSection('Block & Weekend Swaps', 7, [
+      ['Full block swap', fullBlockLabels[state.collaboration.block_swap.willing_full_block] || ''],
+      ['Trade flexibility', tradeFlexLabels[state.collaboration.block_swap.trade_flexibility] || ''],
+      ['Preferred block trade', ymnLabels[state.collaboration.block_swap.preferred_block_trade] || ''],
+      ['Min weekends off/mo', state.collaboration.weekend.min_weekends_off_per_month],
+      ['Extra weeknight for weekend', ymnLabels[state.collaboration.weekend.extra_weeknight_for_weekend] || ''],
+      ['Split block for weekend', splitLabels[state.collaboration.weekend.split_block_for_weekend] || ''],
+      ['Weekend night rank', state.collaboration.weekend.weekend_night_rank.map(function(k) { return k.charAt(0).toUpperCase() + k.slice(1); }).join(' > ')],
+      ['Worse hospital for weekend', ymnLabels[state.collaboration.weekend.worse_hospital_for_weekend] || '']
+    ]);
+}
+
+function reviewSection(title, screenNum, rows) {
+  var html = '<div class="review-section"><div class="section-head">' +
+    '<h3>' + title + '</h3>' +
+    '<a class="edit-link" onclick="goScreen(' + screenNum + ')">Edit</a></div>';
+  rows.forEach(function(r) {
+    html += '<div class="review-row"><span class="rlabel">' + r[0] + '</span><span class="rvalue">' + r[1] + '</span></div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+// ─── SUBMIT ───
+window.submitSurvey = function() {
+  // Gather free text
+  state.availability.vacation_blackout = document.getElementById('vacationDates').value.trim();
+  state.availability.family_obligations = document.getElementById('familyObligations').value.trim();
+
+  var payload = {
+    v: 1,
+    type: 'preferences',
+    ts: new Date().toISOString(),
+    physician: state.physician,
+    block: state.block,
+    days: state.days,
+    times: state.times,
+    locations: state.locations,
+    holidays: state.holidays,
+    availability: state.availability,
+    collaboration: state.collaboration
+  };
+
+  var json = JSON.stringify(payload);
+  var encoded = btoa(unescape(encodeURIComponent(json)));
+
+  document.getElementById('outputCode').textContent = encoded;
+  document.getElementById('confirmName').textContent = state.physician;
+
+  // mailto link
+  var subject = encodeURIComponent('Schedule Preferences - ' + state.physician);
+  var body = encodeURIComponent(encoded);
+  document.getElementById('mailtoLink').href = 'mailto:' + ADMIN_EMAIL + '?subject=' + subject + '&body=' + body;
+
+  // Save to localStorage
+  try { localStorage.setItem('nocturnist_preferences', json); } catch(e) {}
+
+  goScreen(9);
+};
+
+// ─── COPY ───
+window.copyCode = function() {
+  var code = document.getElementById('outputCode').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(showCopied).catch(fallbackCopy);
+  } else {
+    fallbackCopy();
+  }
+};
+
+function fallbackCopy() {
+  var box = document.getElementById('outputCode');
+  var range = document.createRange();
+  range.selectNodeContents(box);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+  try { document.execCommand('copy'); showCopied(); } catch(e) {}
+}
+
+function showCopied() {
+  var msg = document.getElementById('copiedMsg');
+  msg.style.display = 'flex';
+  document.getElementById('copyBtn').textContent = 'Copied!';
+  setTimeout(function() {
+    msg.style.display = 'none';
+    document.getElementById('copyBtn').textContent = 'Copy Code';
+  }, 2500);
+}
+
+// ─── BOOT ───
+init();
+
+})();
+</script>
+</body>
+</html>

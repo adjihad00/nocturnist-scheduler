@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Nocturnist Schedule Survey</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a14;
+  --bg2: #14142a;
+  --border: #2a2a40;
+  --text: #e0e0f0;
+  --text2: #8888aa;
+  --text3: #6666aa;
+  --accent: #3ba4e0;
+  --accent-dim: #1b6ca8;
+  --green: #12b886;
+  --yellow: #fbbf24;
+  --red: #ef4444;
+  --on: #0f4c75;
+  --on-border: #3ba4e0;
+  --off: #1a1a2e;
+  --off-border: #333350;
+}
+
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+/* Screen management */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* Header */
+.header-tag {
+  font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+  text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+}
+h1 {
+  font-size: 24px; font-weight: 800; color: #f0f4fa;
+  letter-spacing: -0.5px; line-height: 1.2; margin-bottom: 8px;
+}
+.subtitle { font-size: 14px; color: var(--text2); line-height: 1.5; margin-bottom: 24px; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 14px 32px; border-radius: 10px; border: none;
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; min-height: 48px; min-width: 48px;
+  touch-action: manipulation;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+  color: #fff; width: 100%;
+}
+.btn-primary:active { transform: scale(0.97); }
+.btn-primary:disabled {
+  background: var(--border); color: var(--text3); cursor: not-allowed;
+  transform: none;
+}
+.btn-secondary {
+  background: var(--bg2); color: var(--text); border: 1px solid var(--border);
+}
+.btn-nav {
+  display: flex; gap: 12px; margin-top: 24px;
+}
+.btn-nav .btn { flex: 1; }
+
+/* Progress bar */
+.progress-wrap { margin-bottom: 20px; }
+.progress-label { font-size: 12px; color: var(--text2); margin-bottom: 6px; font-weight: 600; }
+.progress-bar {
+  background: var(--bg2); border-radius: 8px; height: 6px;
+  border: 1px solid var(--border); overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 8px;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  transition: width 0.4s ease;
+}
+
+/* Pattern card */
+.pattern-header {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 16px;
+}
+.pattern-name { font-size: 20px; font-weight: 800; color: #f0f4fa; margin-bottom: 4px; }
+.pattern-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+
+/* Cycle strip */
+.cycle-strip {
+  display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0;
+  justify-content: center;
+}
+.cycle-day {
+  width: 32px; height: 32px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600;
+}
+.cycle-day.on {
+  background: linear-gradient(135deg, var(--on), var(--accent-dim));
+  border: 2px solid var(--on-border); color: #a0d8ff;
+}
+.cycle-day.off {
+  background: var(--off); border: 2px solid var(--off-border); color: #555570;
+}
+.cycle-legend {
+  font-size: 12px; color: var(--text2); text-align: center;
+  font-style: italic; margin-top: 4px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+  margin-bottom: 16px;
+}
+.stat-box {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px; text-align: center;
+}
+.stat-value { font-size: 20px; font-weight: 800; color: #f0f4fa; }
+.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+/* 8-week calendar */
+.mini-cal-title {
+  font-size: 13px; font-weight: 700; color: #c0c0d0; margin-bottom: 8px;
+}
+.mini-cal {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+  margin-bottom: 16px;
+}
+.mini-cal .day-header {
+  font-size: 9px; color: var(--text3); text-align: center;
+  font-weight: 600; padding: 2px 0;
+}
+.mini-cal .cal-day {
+  aspect-ratio: 1; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 600;
+}
+.mini-cal .cal-day.on { background: var(--accent-dim); color: #a0d8ff; }
+.mini-cal .cal-day.off { background: #1e1e30; color: #444466; }
+
+/* Rating section */
+.rating-section {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; margin-bottom: 16px;
+}
+.rating-title { font-size: 14px; font-weight: 700; color: #c0c0d0; margin-bottom: 14px; }
+.factor-row { margin-bottom: 14px; }
+.factor-row:last-child { margin-bottom: 0; }
+.factor-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.factor-desc { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.rating-btns { display: flex; gap: 6px; }
+.rating-btn {
+  flex: 1; min-height: 44px; min-width: 44px;
+  border-radius: 8px; border: 2px solid var(--border);
+  background: var(--bg); color: var(--text2);
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; touch-action: manipulation;
+}
+.rating-btn.selected {
+  background: linear-gradient(135deg, var(--accent-dim), var(--accent));
+  border-color: var(--accent); color: #fff;
+}
+.rating-btn:active { transform: scale(0.93); }
+
+/* Ranking screen */
+.rank-list { list-style: none; margin-bottom: 16px; }
+.rank-item {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
+  cursor: pointer; transition: all 0.2s; touch-action: manipulation;
+  user-select: none; -webkit-user-select: none;
+}
+.rank-item.dragging {
+  opacity: 0.5; border-color: var(--accent);
+}
+.rank-item.drag-over {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, #0f2744, #132e52);
+}
+.rank-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent-dim); color: #a0d8ff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; flex-shrink: 0;
+}
+.rank-label { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
+.rank-arrows { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+.rank-arrow {
+  width: 32px; height: 26px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--bg);
+  color: var(--text2); font-size: 14px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  touch-action: manipulation;
+}
+.rank-arrow:active { background: var(--accent-dim); color: #fff; }
+.rank-arrow:disabled { opacity: 0.3; cursor: default; }
+
+.comment-box {
+  width: 100%; min-height: 80px; padding: 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg2);
+  color: var(--text); font-size: 14px; font-family: inherit;
+  resize: vertical; margin-top: 8px;
+}
+.comment-box::placeholder { color: var(--text3); }
+.comment-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-top: 16px; }
+
+/* Result screen */
+.code-box {
+  background: #0d1b2a; border: 2px solid var(--accent-dim);
+  border-radius: 10px; padding: 14px; margin: 16px 0;
+  word-break: break-all; font-family: 'SF Mono', 'Consolas', monospace;
+  font-size: 12px; color: var(--accent); line-height: 1.5;
+  max-height: 200px; overflow-y: auto;
+  -webkit-user-select: all; user-select: all;
+}
+.copy-feedback {
+  text-align: center; font-size: 14px; font-weight: 600;
+  color: var(--green); margin-top: 8px; min-height: 20px;
+}
+.instructions {
+  font-size: 13px; color: var(--text2); line-height: 1.6;
+  margin-top: 16px; padding: 14px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px;
+}
+
+/* Completion checkmark */
+.check-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #0f7b5f, var(--green));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 32px; color: #fff;
+}
+
+@media (max-width: 400px) {
+  .cycle-day { width: 26px; height: 26px; font-size: 9px; }
+  .stat-value { font-size: 18px; }
+  .rating-btn { min-height: 40px; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Screen 1: Welcome -->
+  <div class="screen active" id="screen-welcome">
+    <div class="header-tag">NOCTURNIST SCHEDULING</div>
+    <h1>Schedule Preference Survey</h1>
+    <p class="subtitle">
+      This survey helps us find the best nocturnist schedule for our group.
+      You'll review 5 schedule patterns and rate each one. Takes about 5&ndash;10 minutes.
+    </p>
+    <p style="font-size: 13px; color: var(--text3); margin-bottom: 24px;">
+      19 physicians &middot; 7 hospitals &middot; 156 target nights/year
+    </p>
+    <button class="btn btn-primary" onclick="startSurvey()">Start Survey</button>
+  </div>
+
+  <!-- Screen 2: Pattern Rating (dynamically populated) -->
+  <div class="screen" id="screen-pattern">
+    <div class="progress-wrap">
+      <div class="progress-label" id="progress-label">Pattern 1 of 5</div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+    </div>
+    <div id="pattern-content"></div>
+    <div class="btn-nav">
+      <button class="btn btn-secondary" id="btn-prev" onclick="prevPattern()">Back</button>
+      <button class="btn btn-primary" id="btn-next" onclick="nextPattern()" disabled>Next Pattern</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Overall Ranking -->
+  <div class="screen" id="screen-ranking">
+    <div class="header-tag">FINAL STEP</div>
+    <h1>Rank All Patterns</h1>
+    <p class="subtitle">Arrange from most preferred (#1) to least preferred (#5). Use the arrows to reorder.</p>
+    <ul class="rank-list" id="rank-list"></ul>
+    <label class="comment-label">Any additional comments? (optional)</label>
+    <textarea class="comment-box" id="comment" placeholder="Share any thoughts about your preferences..."></textarea>
+    <div class="btn-nav">
+      <button class="btn btn-secondary" onclick="backToPatterns()">Back</button>
+      <button class="btn btn-primary" onclick="submitSurvey()">Submit</button>
+    </div>
+  </div>
+
+  <!-- Screen 4: Result Code -->
+  <div class="screen" id="screen-result">
+    <div class="check-circle">&#10003;</div>
+    <h1 style="text-align:center;">Survey Complete &mdash; Thank You!</h1>
+    <p class="subtitle" style="text-align:center;">Copy the code below and send it to your schedule admin via text or email.</p>
+    <div class="code-box" id="result-code"></div>
+    <button class="btn btn-primary" onclick="copyCode()">Copy Code</button>
+    <div class="copy-feedback" id="copy-feedback"></div>
+    <div class="instructions">
+      <strong>Instructions:</strong> Copy the code above and send it to your schedule coordinator via text or email with the subject line: <em>Schedule Survey</em>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ─── Data ───
+  const PATTERNS = [
+    { id: '6on8off',  label: '6 on / 8 off',  on: 6,  off: 8  },
+    { id: '7on9off',  label: '7 on / 9 off',  on: 7,  off: 9  },
+    { id: '5on7off',  label: '5 on / 7 off',  on: 5,  off: 7  },
+    { id: '7on10off', label: '7 on / 10 off', on: 7,  off: 10 },
+    { id: '8on11off', label: '8 on / 11 off', on: 8,  off: 11 },
+  ];
+
+  const FACTORS = [
+    { key: 'wlb',     label: 'Work-Life Balance',        desc: 'How well does this pattern support your personal life?' },
+    { key: 'sleep',   label: 'Sleep / Circadian Rhythm',  desc: 'How manageable is the sleep transition on this pattern?' },
+    { key: 'wknd',    label: 'Weekend / Holiday Fairness', desc: 'How fair is the weekend/holiday distribution?' },
+    { key: 'consec',  label: 'Consecutive Nights',        desc: 'How tolerable is the consecutive night stretch?' },
+    { key: 'predict', label: 'Schedule Predictability',   desc: 'How easy is it to plan your life around this pattern?' },
+  ];
+
+  // ─── State ───
+  let currentPattern = 0;
+  const ratings = {};
+  PATTERNS.forEach(p => { ratings[p.id] = {}; });
+  let ranking = PATTERNS.map(p => p.id);
+
+  // ─── Helpers ───
+  function calcNightsYear(p) { return Math.round((p.on / (p.on + p.off)) * 365); }
+
+  function approxWeekendsPerMonth(p) {
+    const cycle = p.on + p.off;
+    // simulate 365 days, count weekend nights (Fri/Sat) that are "on"
+    let wkndOn = 0;
+    for (let d = 0; d < 365; d++) {
+      const posInCycle = d % cycle;
+      const isOn = posInCycle < p.on;
+      const dayOfWeek = d % 7; // 0=Mon for simulation
+      if (isOn && (dayOfWeek === 4 || dayOfWeek === 5)) wkndOn++;
+    }
+    return (wkndOn / 12).toFixed(1);
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  // ─── Screen 2: Pattern rendering ───
+  function renderPattern(idx) {
+    const p = PATTERNS[idx];
+    const cycle = p.on + p.off;
+    const nightsYr = calcNightsYear(p);
+
+    // Progress
+    document.getElementById('progress-label').textContent = 'Pattern ' + (idx + 1) + ' of 5';
+    document.getElementById('progress-fill').style.width = ((idx + 1) / 5 * 100) + '%';
+
+    // Buttons
+    document.getElementById('btn-prev').style.display = idx === 0 ? 'none' : '';
+    updateNextBtn();
+
+    let html = '';
+
+    // Pattern header
+    html += '<div class="pattern-header">';
+    html += '<div class="pattern-name">' + p.label + '</div>';
+    html += '<div class="pattern-desc">You work ' + p.on + ' consecutive nights, then get ' + p.off + ' nights off. ~' + nightsYr + ' nights/year.</div>';
+    html += '</div>';
+
+    // Cycle strip
+    html += '<div class="cycle-strip">';
+    for (let i = 0; i < cycle; i++) {
+      const cls = i < p.on ? 'on' : 'off';
+      html += '<div class="cycle-day ' + cls + '">' + (i + 1) + '</div>';
+    }
+    html += '</div>';
+    html += '<div class="cycle-legend">' + p.on + ' nights on → ' + p.off + ' off → repeat</div>';
+
+    // Stats
+    html += '<div class="stats-grid">';
+    html += statBox(p.on, 'Consecutive On');
+    html += statBox(p.off, 'Consecutive Off');
+    html += statBox(approxWeekendsPerMonth(p), 'Wknd Nights/Mo');
+    html += statBox(nightsYr, 'Total Nights/Yr');
+    html += '</div>';
+
+    // 8-week mini calendar
+    html += '<div class="mini-cal-title">8-Week Preview</div>';
+    html += '<div class="mini-cal">';
+    var dayHeaders = ['M','T','W','T','F','S','S'];
+    for (var dh = 0; dh < 7; dh++) {
+      html += '<div class="day-header">' + dayHeaders[dh] + '</div>';
+    }
+    for (let d = 0; d < 56; d++) {
+      var posInCycle = d % cycle;
+      var isOn = posInCycle < p.on;
+      html += '<div class="cal-day ' + (isOn ? 'on' : 'off') + '">' + (d + 1) + '</div>';
+    }
+    html += '</div>';
+
+    // Rating section
+    html += '<div class="rating-section">';
+    html += '<div class="rating-title">Rate This Pattern</div>';
+    FACTORS.forEach(function(f) {
+      var val = ratings[p.id][f.key] || 0;
+      html += '<div class="factor-row">';
+      html += '<div class="factor-label">' + f.label + '</div>';
+      html += '<div class="factor-desc">' + f.desc + '</div>';
+      html += '<div class="rating-btns">';
+      for (var r = 1; r <= 5; r++) {
+        var sel = r === val ? ' selected' : '';
+        html += '<button class="rating-btn' + sel + '" data-pattern="' + p.id + '" data-factor="' + f.key + '" data-value="' + r + '" onclick="window._rate(this)">' + r + '</button>';
+      }
+      html += '</div></div>';
+    });
+    html += '</div>';
+
+    document.getElementById('pattern-content').innerHTML = html;
+  }
+
+  function statBox(value, label) {
+    return '<div class="stat-box"><div class="stat-value">' + value + '</div><div class="stat-label">' + label + '</div></div>';
+  }
+
+  function updateNextBtn() {
+    var p = PATTERNS[currentPattern];
+    var allRated = FACTORS.every(function(f) { return ratings[p.id][f.key]; });
+    var btn = document.getElementById('btn-next');
+    btn.disabled = !allRated;
+    btn.textContent = currentPattern === 4 ? 'Continue to Ranking' : 'Next Pattern';
+  }
+
+  // ─── Rating handler ───
+  window._rate = function(el) {
+    var pid = el.getAttribute('data-pattern');
+    var fkey = el.getAttribute('data-factor');
+    var val = parseInt(el.getAttribute('data-value'));
+    ratings[pid][fkey] = val;
+
+    // Update button states in this row
+    var row = el.parentNode;
+    row.querySelectorAll('.rating-btn').forEach(function(b) {
+      b.classList.toggle('selected', parseInt(b.getAttribute('data-value')) === val);
+    });
+
+    updateNextBtn();
+  };
+
+  // ─── Navigation ───
+  window.startSurvey = function() {
+    currentPattern = 0;
+    showScreen('pattern');
+    renderPattern(0);
+  };
+
+  window.nextPattern = function() {
+    if (currentPattern < 4) {
+      currentPattern++;
+      renderPattern(currentPattern);
+    } else {
+      showRanking();
+    }
+  };
+
+  window.prevPattern = function() {
+    if (currentPattern > 0) {
+      currentPattern--;
+      renderPattern(currentPattern);
+    }
+  };
+
+  // ─── Screen 3: Ranking ───
+  function showRanking() {
+    showScreen('ranking');
+    renderRankList();
+  }
+
+  function renderRankList() {
+    var list = document.getElementById('rank-list');
+    var html = '';
+    ranking.forEach(function(pid, idx) {
+      var p = PATTERNS.find(function(x) { return x.id === pid; });
+      html += '<li class="rank-item" data-idx="' + idx + '">';
+      html += '<div class="rank-num">' + (idx + 1) + '</div>';
+      html += '<div class="rank-label">' + p.label + '</div>';
+      html += '<div class="rank-arrows">';
+      html += '<button class="rank-arrow" onclick="window._moveRank(' + idx + ',-1)"' + (idx === 0 ? ' disabled' : '') + '>&#9650;</button>';
+      html += '<button class="rank-arrow" onclick="window._moveRank(' + idx + ',1)"' + (idx === 4 ? ' disabled' : '') + '>&#9660;</button>';
+      html += '</div></li>';
+    });
+    list.innerHTML = html;
+
+    // Touch drag support
+    setupDragAndDrop();
+  }
+
+  window._moveRank = function(idx, dir) {
+    var newIdx = idx + dir;
+    if (newIdx < 0 || newIdx > 4) return;
+    var temp = ranking[idx];
+    ranking[idx] = ranking[newIdx];
+    ranking[newIdx] = temp;
+    renderRankList();
+  };
+
+  function setupDragAndDrop() {
+    var items = document.querySelectorAll('.rank-item');
+    var dragIdx = -1;
+
+    items.forEach(function(item, i) {
+      item.setAttribute('draggable', 'true');
+
+      item.addEventListener('dragstart', function(e) {
+        dragIdx = i;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      item.addEventListener('dragend', function() {
+        item.classList.remove('dragging');
+        items.forEach(function(it) { it.classList.remove('drag-over'); });
+      });
+
+      item.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        item.classList.add('drag-over');
+      });
+
+      item.addEventListener('dragleave', function() {
+        item.classList.remove('drag-over');
+      });
+
+      item.addEventListener('drop', function(e) {
+        e.preventDefault();
+        if (dragIdx !== i && dragIdx >= 0) {
+          var moved = ranking.splice(dragIdx, 1)[0];
+          ranking.splice(i, 0, moved);
+          renderRankList();
+        }
+      });
+    });
+
+    // Touch drag
+    var touchStartIdx = -1;
+    var touchY = 0;
+
+    items.forEach(function(item, i) {
+      item.addEventListener('touchstart', function(e) {
+        touchStartIdx = i;
+        touchY = e.touches[0].clientY;
+      }, { passive: true });
+
+      item.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+      }, { passive: false });
+
+      item.addEventListener('touchend', function(e) {
+        if (touchStartIdx < 0) return;
+        var endY = e.changedTouches[0].clientY;
+        var diff = endY - touchY;
+        if (Math.abs(diff) > 30) {
+          var dir = diff > 0 ? 1 : -1;
+          window._moveRank(touchStartIdx, dir);
+        }
+        touchStartIdx = -1;
+      });
+    });
+  }
+
+  window.backToPatterns = function() {
+    currentPattern = 4;
+    showScreen('pattern');
+    renderPattern(4);
+  };
+
+  // ─── Screen 4: Submit ───
+  window.submitSurvey = function() {
+    var data = {
+      v: 1,
+      ts: new Date().toISOString(),
+      ratings: ratings,
+      ranking: ranking,
+      comment: document.getElementById('comment').value.trim()
+    };
+
+    // Base64 encode with UTF-8 support
+    var json = JSON.stringify(data);
+    var encoded;
+    try {
+      encoded = btoa(unescape(encodeURIComponent(json)));
+    } catch (e) {
+      encoded = btoa(json);
+    }
+
+    document.getElementById('result-code').textContent = encoded;
+    document.getElementById('copy-feedback').textContent = '';
+    showScreen('result');
+  };
+
+  window.copyCode = function() {
+    var code = document.getElementById('result-code').textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(function() {
+        showCopyFeedback();
+      }).catch(function() {
+        fallbackCopy(code);
+      });
+    } else {
+      fallbackCopy(code);
+    }
+  };
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showCopyFeedback();
+    } catch (e) {
+      document.getElementById('copy-feedback').textContent = 'Select the code above and copy manually.';
+    }
+    document.body.removeChild(ta);
+  }
+
+  function showCopyFeedback() {
+    var el = document.getElementById('copy-feedback');
+    el.textContent = '\u2713 Copied!';
+    setTimeout(function() { el.textContent = ''; }, 3000);
+  }
+
+})();
+</script>
+</body>
+</html>
