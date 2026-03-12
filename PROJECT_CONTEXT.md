@@ -1,5 +1,5 @@
 # Nocturnist Scheduler — Project Context
-## Last Updated: 2026-03-11
+## Last Updated: 2026-03-12
 
 ---
 
@@ -112,8 +112,8 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
    - **Pattern rating survey** — anonymous, rates 5 schedule patterns on 5 factors
    - **Preference survey** — named (dropdown), collects individual scheduling constraints and preferences
 6. **Both surveys are offline standalone `.html` files** — sent via text/email, work in any browser without internet
-7. **Pattern survey return method:** copy-paste Base64 code, physician texts/emails it back manually
-8. **Preference survey return method:** mailto: link opens pre-filled email with code in body, copy-paste as fallback
+7. **Pattern survey return method:** auto-submit to Google Sheet via Apps Script + copy-paste Base64 code as fallback
+8. **Preference survey return method:** auto-submit to Google Sheet via Apps Script + mailto link + copy-paste as fallback
 9. **Admin import tools** — separate routes in React app for each survey type
 10. **Both mobile and desktop equally important** — responsive design required
 11. **Survey v2.1 rating per schedule variant:** overall 1-5 stars + accept yes/no + optional comment (replaced 5-factor rating system)
@@ -149,6 +149,7 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 13. **Holiday options:** New Year's Eve, New Year's Day, Easter, Memorial Day, Independence Day, Labor Day, Halloween, Veterans Day
 14. **Coding done in Claude Code** — tracked via GitHub repo `nocturnist-scheduler`
 15. **Spreadsheet maintained separately** — for admin's own analysis/manipulation
+16. **Auto-submit via Google Apps Script** — both survey.html and preferences.html POST to a Google Apps Script web app that appends rows to a Google Sheet. Uses `no-cors` mode + `text/plain` Content-Type to avoid CORS preflight. Config in `config.js`. Manual copy/email fallback preserved.
 
 ---
 
@@ -219,6 +220,10 @@ nocturnist-scheduler/
 │   │   └── constants.js           # Hospitals, patterns, physicians, rating factors
 │   └── utils/
 │       └── calc.js                # Coverage, stagger math
+├── config.js                      # Shared config (APPS_SCRIPT_URL for auto-submit)
+├── google-apps-script/
+│   ├── receiver.gs                # Google Apps Script doPost/doGet receiver
+│   └── SETUP.md                   # Deployment instructions
 ├── survey.html                    # Phase 2A: anonymous pattern rating (offline)
 ├── preferences.html               # Phase 2B: named preference collection (offline)
 ├── PHASE2_SPEC_v2.md

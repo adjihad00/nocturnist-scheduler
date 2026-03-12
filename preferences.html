@@ -185,7 +185,18 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
   .day-btn{padding:10px 12px;font-size:12px;min-width:44px}
   .three-btn{font-size:11px;padding:8px 4px}
 }
+.submit-status-ok {
+  color: #4ade80;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.submit-status-fallback {
+  color: #fbbf24;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
 </style>
+<script src="config.js"></script>
 </head>
 <body>
 <div class="container" id="app">
@@ -731,6 +742,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
       <h1 style="margin-bottom:4px">Preferences Submitted!</h1>
       <p>Thank you, <span id="confirmName"></span>.</p>
     </div>
+    <div id="submit-status-pref"></div>
     <div class="card">
       <h3>Your Code</h3>
       <div class="code-box" id="outputCode"></div>
@@ -789,6 +801,34 @@ var WEEKEND_NIGHTS = [
 
 var ADMIN_EMAIL = 'kydiazdo@gmail.com';
 var TOTAL_SCREENS = 10;
+
+async function submitToGoogleSheet(source, version, respondentId, base64Payload) {
+  if (typeof APPS_SCRIPT_URL === 'undefined' || !APPS_SCRIPT_URL || APPS_SCRIPT_URL === "") {
+    console.warn("APPS_SCRIPT_URL not configured — skipping auto-submit");
+    return { status: "skipped", message: "No endpoint configured" };
+  }
+
+  var body = {
+    source: source,
+    version: version,
+    timestamp: new Date().toISOString(),
+    respondentId: respondentId,
+    payload: base64Payload
+  };
+
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body),
+      mode: "no-cors"
+    });
+    return { status: "ok" };
+  } catch (error) {
+    console.error("Auto-submit failed:", error);
+    return { status: "error", message: error.message };
+  }
+}
 
 // ─── STATE ───
 var currentScreen = 1;
@@ -1404,7 +1444,7 @@ function reviewSection(title, screenNum, rows) {
 }
 
 // ─── SUBMIT ───
-window.submitSurvey = function() {
+window.submitSurvey = async function() {
   // Gather free text
   state.availability.vacation_blackout = document.getElementById('vacationDates').value.trim();
   state.availability.family_obligations = document.getElementById('familyObligations').value.trim();
@@ -1436,6 +1476,15 @@ window.submitSurvey = function() {
   var subject = encodeURIComponent('Schedule Preferences - ' + state.physician);
   var body = encodeURIComponent(encoded);
   document.getElementById('mailtoLink').href = 'mailto:' + ADMIN_EMAIL + '?subject=' + subject + '&body=' + body;
+
+  // Auto-submit to Google Sheet
+  var statusEl = document.getElementById('submit-status-pref');
+  if (typeof APPS_SCRIPT_URL !== 'undefined' && APPS_SCRIPT_URL && APPS_SCRIPT_URL !== "") {
+    await submitToGoogleSheet("preferences", "1.0", state.physician || "anonymous", encoded);
+    statusEl.innerHTML = '<p class="submit-status-ok">&#10003; Response submitted automatically. You may also copy the code below as a backup.</p>';
+  } else {
+    statusEl.innerHTML = '<p class="submit-status-fallback">Copy the code below and email it to your administrator.</p>';
+  }
 
   // Save to localStorage
   try { localStorage.setItem('nocturnist_preferences', json); } catch(e) {}

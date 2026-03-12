@@ -294,7 +294,18 @@ h1 {
   .sched-badge { font-size: 18px; }
   .rating-btn { min-height: 44px; font-size: 13px; }
 }
+.submit-status-ok {
+  color: #4ade80;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.submit-status-fallback {
+  color: #fbbf24;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
 </style>
+<script src="config.js"></script>
 </head>
 <body>
 <div class="container">
@@ -343,7 +354,7 @@ h1 {
   <div class="screen" id="screen-result">
     <div class="check-circle">&#10003;</div>
     <h1 style="text-align:center;">Thank You!</h1>
-    <p class="subtitle" style="text-align:center;">Copy the code below and text it to your administrator.</p>
+    <div id="submit-status"></div>
     <div class="code-box" id="result-code"></div>
     <button class="btn btn-primary" onclick="S.copy()">Copy Code</button>
     <div class="copy-feedback" id="copy-feedback"></div>
@@ -364,6 +375,34 @@ h1 {
   var TOTAL_VARIANTS_PER_RESPONDENT = 14;
   var TOTAL_STEPS = 17; // welcome(1) + 14 reviews(2-15) + top3(16) + result(17)
   var ADMIN_EMAIL = 'kydiazdo@gmail.com';
+
+  async function submitToGoogleSheet(source, version, respondentId, base64Payload) {
+    if (typeof APPS_SCRIPT_URL === 'undefined' || !APPS_SCRIPT_URL || APPS_SCRIPT_URL === "") {
+      console.warn("APPS_SCRIPT_URL not configured — skipping auto-submit");
+      return { status: "skipped", message: "No endpoint configured" };
+    }
+
+    var body = {
+      source: source,
+      version: version,
+      timestamp: new Date().toISOString(),
+      respondentId: respondentId,
+      payload: base64Payload
+    };
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify(body),
+        mode: "no-cors"
+      });
+      return { status: "ok" };
+    } catch (error) {
+      console.error("Auto-submit failed:", error);
+      return { status: "error", message: error.message };
+    }
+  }
 
   // ─── Pattern Definitions (9 patterns) ───
   var PATTERNS = [
@@ -817,7 +856,7 @@ h1 {
       renderTop3();
     },
 
-    submit: function() {
+    submit: async function() {
       var data = {
         surveyVersion: '2.1',
         timestamp: new Date().toISOString(),
@@ -850,6 +889,15 @@ h1 {
       var subject = encodeURIComponent('Schedule Survey');
       var body = encodeURIComponent(encoded);
       document.getElementById('mailto-link').href = 'mailto:' + ADMIN_EMAIL + '?subject=' + subject + '&body=' + body;
+
+      // Auto-submit to Google Sheet
+      var statusEl = document.getElementById('submit-status');
+      if (typeof APPS_SCRIPT_URL !== 'undefined' && APPS_SCRIPT_URL && APPS_SCRIPT_URL !== "") {
+        await submitToGoogleSheet("survey", "2.1", "anonymous", encoded);
+        statusEl.innerHTML = '<p class="submit-status-ok">&#10003; Response submitted automatically. You may also copy the code below as a backup.</p>';
+      } else {
+        statusEl.innerHTML = '<p class="submit-status-fallback">Copy the code below and email it to your administrator.</p>';
+      }
 
       showScreen('result');
     },
