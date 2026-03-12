@@ -145,6 +145,8 @@ h1 {
   font-size: 10px; color: var(--text3); text-align: center;
   font-weight: 600; padding: 4px 0;
 }
+.cal-hdr.wknd { color: #7a6a90; }
+.cal-cell.wknd-col { border-bottom: 2px solid #2a2040; }
 .cal-cell {
   aspect-ratio: 1; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
@@ -609,7 +611,7 @@ h1 {
       { name: 'May 2026',    year: 2026, month: 4, days: 31, dateOffset: 30 },
       { name: 'June 2026',   year: 2026, month: 5, days: 30, dateOffset: 61 }
     ];
-    var hdrs = ['M','T','W','T','F','S','S'];
+    var hdrs = ['S','M','T','W','T','F','S'];
     var hasMiniBreak = variant.type === 'split';
     var html = '';
 
@@ -623,15 +625,16 @@ h1 {
     html += '</div>';
 
     months.forEach(function(m) {
-      var firstDay = new Date(m.year, m.month, 1).getDay();
-      var startCol = (firstDay + 6) % 7;
+      var firstDay = new Date(m.year, m.month, 1).getDay(); // 0=Sun
+      var startCol = firstDay; // Sun-start: Sun=0, Mon=1, ... Sat=6
 
       html += '<div class="cal-month">';
       html += '<div class="cal-month-label">' + m.name + '</div>';
       html += '<div class="cal-grid">';
 
       for (var h = 0; h < 7; h++) {
-        html += '<div class="cal-hdr">' + hdrs[h] + '</div>';
+        var wknd = (h === 5 || h === 6) ? ' wknd' : '';
+        html += '<div class="cal-hdr' + wknd + '">' + hdrs[h] + '</div>';
       }
 
       for (var e = 0; e < startCol; e++) {
@@ -641,7 +644,9 @@ h1 {
       for (var d = 1; d <= m.days; d++) {
         var idx = m.dateOffset + d - 1;
         var st = variant.dates[idx].status;
-        html += '<div class="cal-cell ' + st + '">' + d + '</div>';
+        var dow = (startCol + d - 1) % 7;
+        var wkndCls = (dow === 5 || dow === 6) ? ' wknd-col' : '';
+        html += '<div class="cal-cell ' + st + wkndCls + '">' + d + '</div>';
       }
 
       html += '</div></div>';
