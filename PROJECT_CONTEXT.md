@@ -105,12 +105,10 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 8. **Preference survey return method:** mailto: link opens pre-filled email with code in body, copy-paste as fallback
 9. **Admin import tools** — separate routes in React app for each survey type
 10. **Both mobile and desktop equally important** — responsive design required
-11. **Rating factors for pattern survey (5 total, 1-5 scale per pattern):**
-    - Work-life balance
-    - Sleep/circadian rhythm friendliness
-    - Weekend/holiday fairness
-    - Consecutive nights tolerance
-    - Schedule predictability
+11. **Survey v2.0 rating per schedule variant:** overall 1-5 stars + accept yes/no + optional comment (replaced 5-factor rating system)
+    - 35 variants (5 patterns × 7 start days) with real Apr–Jun 2026 calendar dates
+    - Stratified sampling: 10 per respondent, at least 1 per pattern, max 3 per pattern
+    - Top 3 selection replaces drag-to-rank
 12. **Preference survey data points:**
     - Physician name (dropdown)
     - Preferred nights on per block (3-10)
@@ -149,11 +147,15 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 - GitHub repo: `nocturnist-scheduler` (private)
 - Spreadsheet version also delivered (`nocturnist_schedule_analysis.xlsx`)
 
-### Phase 2A: Anonymous Pattern Rating Survey ✅ COMPLETE
+### Phase 2A: Schedule Rating Survey v2.0 ✅ REBUILT
 **Spec file:** `PHASE2_SPEC_v2.md`
 - `survey.html` — standalone offline file, dark theme, mobile responsive
-- Welcome → Pattern walkthrough (cycle viz, stats, 8-week calendar, 5-factor rating per pattern) → Overall drag-to-rank → Copy-paste Base64 code
-- Admin import at `/admin/import` — paste codes, first-place votes chart, avg rank chart, rank distribution table, factor heatmap, grouped bar chart, per-factor winners, comments, CSV/JSON export
+- **v2.0 rebuild**: Real calendar dates (Apr–Jun 2026), randomized variant system
+- 35 pre-generated variants (5 patterns × 7 start days), stratified random sampling selects 10 per respondent
+- Sampling: at least 1 from each pattern, no more than 3 from any single pattern
+- Welcome → 10 schedule reviews (3-month calendar, overall 1-5 rating, accept yes/no, optional comment) → Pick top 3 → Copy-paste Base64 code
+- Output format: `surveyVersion: "2.0"`, `variantsPresented` (10 variant IDs), `ratings` (10 objects with variantId/patternId/startDay/overall/accept/comment), `top3` (3 variant IDs)
+- Admin import at `/admin/import` — needs update to support v2.0 data format (variant heatmap, acceptance rates, pattern/start-day aggregates, top 3 frequency)
 - localStorage key: `nocturnist_survey_responses`
 
 ### Phase 2B: Named Preference Survey ✅ COMPLETE
@@ -238,8 +240,8 @@ nocturnist-scheduler/
 ## Open Items
 - [ ] FTE adjustments per physician (future iteration)
 - [ ] Hospital assignment percentage validation against actual slot math
-- [x] `survey.html` — ✅ built (Phase 2A)
-- [x] Admin import tool for survey — ✅ built at `/admin/import` (Phase 2A)
+- [x] `survey.html` — ✅ rebuilt v2.0 with real dates + variant system (Phase 2A)
+- [ ] Admin import tool for survey — needs update at `/admin/import` to support v2.0 data format
 - [x] `preferences.html` — ✅ built (Phase 2B)
 - [x] Admin preferences import tool — ✅ built at `/admin/preferences` (Phase 2B)
 - [ ] Personalized calendar preview (Phase 3)

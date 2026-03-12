@@ -42,7 +42,11 @@ body {
 
 /* Screen management */
 .screen { display: none; }
-.screen.active { display: block; }
+.screen.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* Header */
 .header-tag {
@@ -75,9 +79,7 @@ h1 {
 .btn-secondary {
   background: var(--bg2); color: var(--text); border: 1px solid var(--border);
 }
-.btn-nav {
-  display: flex; gap: 12px; margin-top: 24px;
-}
+.btn-nav { display: flex; gap: 12px; margin-top: 24px; }
 .btn-nav .btn { flex: 1; }
 
 /* Progress bar */
@@ -93,85 +95,63 @@ h1 {
   transition: width 0.4s ease;
 }
 
-/* Pattern card */
-.pattern-header {
+/* Schedule header */
+.sched-header {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 12px; padding: 16px; margin-bottom: 16px;
 }
-.pattern-name { font-size: 20px; font-weight: 800; color: #f0f4fa; margin-bottom: 4px; }
-.pattern-desc { font-size: 13px; color: var(--text2); line-height: 1.5; }
+.sched-num { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.sched-badge { font-size: 20px; font-weight: 800; color: #f0f4fa; margin-bottom: 4px; }
+.sched-stats { font-size: 13px; color: var(--text2); }
 
-/* Cycle strip */
-.cycle-strip {
-  display: flex; gap: 4px; flex-wrap: wrap; margin: 12px 0;
-  justify-content: center;
+/* Calendar */
+.cal-month { margin-bottom: 16px; }
+.cal-month-label {
+  font-size: 14px; font-weight: 700; color: #c0c0d0;
+  margin-bottom: 6px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
 }
-.cycle-day {
-  width: 32px; height: 32px; border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 600;
-}
-.cycle-day.on {
-  background: linear-gradient(135deg, var(--on), var(--accent-dim));
-  border: 2px solid var(--on-border); color: #a0d8ff;
-}
-.cycle-day.off {
-  background: var(--off); border: 2px solid var(--off-border); color: #555570;
-}
-.cycle-legend {
-  font-size: 12px; color: var(--text2); text-align: center;
-  font-style: italic; margin-top: 4px;
-}
-
-/* Stats grid */
-.stats-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-  margin-bottom: 16px;
-}
-.stat-box {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 12px; text-align: center;
-}
-.stat-value { font-size: 20px; font-weight: 800; color: #f0f4fa; }
-.stat-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
-
-/* 8-week calendar */
-.mini-cal-title {
-  font-size: 13px; font-weight: 700; color: #c0c0d0; margin-bottom: 8px;
-}
-.mini-cal {
+.cal-grid {
   display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
-  margin-bottom: 16px;
 }
-.mini-cal .day-header {
-  font-size: 9px; color: var(--text3); text-align: center;
-  font-weight: 600; padding: 2px 0;
+.cal-hdr {
+  font-size: 10px; color: var(--text3); text-align: center;
+  font-weight: 600; padding: 4px 0;
 }
-.mini-cal .cal-day {
-  aspect-ratio: 1; border-radius: 4px;
+.cal-cell {
+  aspect-ratio: 1; border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 9px; font-weight: 600;
+  font-size: 12px; font-weight: 600;
+  min-width: 36px; min-height: 36px;
 }
-.mini-cal .cal-day.on { background: var(--accent-dim); color: #a0d8ff; }
-.mini-cal .cal-day.off { background: #1e1e30; color: #444466; }
+.cal-cell.on {
+  background: linear-gradient(135deg, var(--on), var(--accent-dim));
+  color: #a0d8ff;
+}
+.cal-cell.off {
+  background: var(--off); color: #555570;
+}
+.cal-cell.pre {
+  background: #111119; color: #2a2a38;
+}
+.cal-cell.empty {
+  background: transparent;
+}
 
 /* Rating section */
 .rating-section {
   background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 12px; padding: 16px; margin-bottom: 16px;
+  border-radius: 12px; padding: 16px; margin-bottom: 12px;
 }
-.rating-title { font-size: 14px; font-weight: 700; color: #c0c0d0; margin-bottom: 14px; }
-.factor-row { margin-bottom: 14px; }
-.factor-row:last-child { margin-bottom: 0; }
-.factor-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-.factor-desc { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+.rating-title { font-size: 14px; font-weight: 700; color: #c0c0d0; margin-bottom: 10px; }
 .rating-btns { display: flex; gap: 6px; }
 .rating-btn {
-  flex: 1; min-height: 44px; min-width: 44px;
+  flex: 1; min-height: 48px; min-width: 48px;
   border-radius: 8px; border: 2px solid var(--border);
   background: var(--bg); color: var(--text2);
-  font-size: 16px; font-weight: 700; cursor: pointer;
+  font-size: 15px; font-weight: 700; cursor: pointer;
   transition: all 0.15s; touch-action: manipulation;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
 }
 .rating-btn.selected {
   background: linear-gradient(135deg, var(--accent-dim), var(--accent));
@@ -179,50 +159,84 @@ h1 {
 }
 .rating-btn:active { transform: scale(0.93); }
 
-/* Ranking screen */
-.rank-list { list-style: none; margin-bottom: 16px; }
-.rank-item {
+/* Yes/No buttons */
+.yn-btns { display: flex; gap: 8px; }
+.yn-btn {
+  flex: 1; min-height: 48px;
+  border-radius: 10px; border: 2px solid var(--border);
+  background: var(--bg); color: var(--text2);
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: all 0.15s; touch-action: manipulation;
+}
+.yn-btn.sel-yes {
+  background: linear-gradient(135deg, #0f7b5f, var(--green));
+  border-color: var(--green); color: #fff;
+}
+.yn-btn.sel-no {
+  background: linear-gradient(135deg, #8b2020, var(--red));
+  border-color: var(--red); color: #fff;
+}
+.yn-btn:active { transform: scale(0.95); }
+
+/* Comment */
+.comment-wrap { margin-bottom: 4px; }
+.comment-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+.comment-box {
+  width: 100%; min-height: 56px; padding: 10px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--bg2);
+  color: var(--text); font-size: 13px; font-family: inherit;
+  resize: vertical;
+}
+.comment-box::placeholder { color: var(--text3); }
+.char-count { font-size: 11px; color: var(--text3); text-align: right; margin-top: 2px; }
+
+/* Top 3 cards */
+.top3-grid { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.top3-card {
   display: flex; align-items: center; gap: 12px;
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 14px 16px; margin-bottom: 8px;
-  cursor: pointer; transition: all 0.2s; touch-action: manipulation;
-  user-select: none; -webkit-user-select: none;
+  background: var(--bg2); border: 2px solid var(--border);
+  border-radius: 12px; padding: 14px; cursor: pointer;
+  transition: all 0.15s; touch-action: manipulation;
 }
-.rank-item.dragging {
-  opacity: 0.5; border-color: var(--accent);
-}
-.rank-item.drag-over {
+.top3-card.selected {
   border-color: var(--accent);
   background: linear-gradient(135deg, #0f2744, #132e52);
 }
-.rank-num {
+.top3-card:active { transform: scale(0.98); }
+.top3-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: var(--text2); flex-shrink: 0;
+}
+.top3-card.selected .top3-num {
+  background: var(--accent); color: #fff; border-color: var(--accent);
+}
+.top3-info { flex: 1; min-width: 0; }
+.top3-label { font-size: 14px; font-weight: 700; color: var(--text); }
+.top3-detail { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.top3-check {
   width: 28px; height: 28px; border-radius: 50%;
-  background: var(--accent-dim); color: #a0d8ff;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 14px; font-weight: 800; flex-shrink: 0;
+  border: 2px solid var(--border); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 16px; color: transparent; flex-shrink: 0;
+  transition: all 0.15s;
 }
-.rank-label { font-size: 15px; font-weight: 600; color: var(--text); flex: 1; }
-.rank-arrows { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
-.rank-arrow {
-  width: 32px; height: 26px; border: 1px solid var(--border);
-  border-radius: 6px; background: var(--bg);
-  color: var(--text2); font-size: 14px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  touch-action: manipulation;
+.top3-card.selected .top3-check {
+  border-color: var(--green); color: var(--green); background: rgba(18,184,134,0.1);
 }
-.rank-arrow:active { background: var(--accent-dim); color: #fff; }
-.rank-arrow:disabled { opacity: 0.3; cursor: default; }
-
-.comment-box {
-  width: 100%; min-height: 80px; padding: 12px; border-radius: 10px;
-  border: 1px solid var(--border); background: var(--bg2);
-  color: var(--text); font-size: 14px; font-family: inherit;
-  resize: vertical; margin-top: 8px;
+.top3-count {
+  text-align: center; font-size: 14px; font-weight: 600;
+  color: var(--text2); margin-bottom: 16px;
 }
-.comment-box::placeholder { color: var(--text3); }
-.comment-label { font-size: 13px; font-weight: 600; color: var(--text2); margin-top: 16px; }
 
 /* Result screen */
+.check-circle {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #0f7b5f, var(--green));
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 32px; color: #fff;
+}
 .code-box {
   background: #0d1b2a; border: 2px solid var(--accent-dim);
   border-radius: 10px; padding: 14px; margin: 16px 0;
@@ -241,18 +255,10 @@ h1 {
   border: 1px solid var(--border); border-radius: 10px;
 }
 
-/* Completion checkmark */
-.check-circle {
-  width: 64px; height: 64px; border-radius: 50%;
-  background: linear-gradient(135deg, #0f7b5f, var(--green));
-  display: flex; align-items: center; justify-content: center;
-  margin: 0 auto 16px; font-size: 32px; color: #fff;
-}
-
 @media (max-width: 400px) {
-  .cycle-day { width: 26px; height: 26px; font-size: 9px; }
-  .stat-value { font-size: 18px; }
-  .rating-btn { min-height: 40px; font-size: 14px; }
+  .cal-cell { font-size: 10px; min-width: 32px; min-height: 32px; }
+  .sched-badge { font-size: 18px; }
+  .rating-btn { min-height: 44px; font-size: 13px; }
 }
 </style>
 </head>
@@ -262,51 +268,50 @@ h1 {
   <!-- Screen 1: Welcome -->
   <div class="screen active" id="screen-welcome">
     <div class="header-tag">NOCTURNIST SCHEDULING</div>
-    <h1>Schedule Preference Survey</h1>
+    <h1>Nocturnist Schedule Survey</h1>
     <p class="subtitle">
-      This survey helps us find the best nocturnist schedule for our group.
-      You'll review 5 schedule patterns and rate each one. Takes about 5&ndash;10 minutes.
+      You'll review 10 possible schedule patterns shown on a real April&ndash;June 2026 calendar.
+      Each schedule has a different work pattern and start day. Rate each one, then pick your top 3.
     </p>
-    <p style="font-size: 13px; color: var(--text3); margin-bottom: 24px;">
-      19 physicians &middot; 7 hospitals &middot; 156 target nights/year
-    </p>
-    <button class="btn btn-primary" onclick="startSurvey()">Start Survey</button>
+    <button class="btn btn-primary" onclick="S.start()">Start</button>
   </div>
 
-  <!-- Screen 2: Pattern Rating (dynamically populated) -->
-  <div class="screen" id="screen-pattern">
+  <!-- Screens 2-11: Schedule Review -->
+  <div class="screen" id="screen-review">
     <div class="progress-wrap">
-      <div class="progress-label" id="progress-label">Pattern 1 of 5</div>
-      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:20%"></div></div>
+      <div class="progress-label" id="prog-label"></div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
     </div>
-    <div id="pattern-content"></div>
+    <div id="review-content"></div>
     <div class="btn-nav">
-      <button class="btn btn-secondary" id="btn-prev" onclick="prevPattern()">Back</button>
-      <button class="btn btn-primary" id="btn-next" onclick="nextPattern()" disabled>Next Pattern</button>
+      <button class="btn btn-secondary" id="btn-back" onclick="S.back()">Back</button>
+      <button class="btn btn-primary" id="btn-next" onclick="S.next()" disabled>Next</button>
     </div>
   </div>
 
-  <!-- Screen 3: Overall Ranking -->
-  <div class="screen" id="screen-ranking">
-    <div class="header-tag">FINAL STEP</div>
-    <h1>Rank All Patterns</h1>
-    <p class="subtitle">Arrange from most preferred (#1) to least preferred (#5). Use the arrows to reorder.</p>
-    <ul class="rank-list" id="rank-list"></ul>
-    <label class="comment-label">Any additional comments? (optional)</label>
-    <textarea class="comment-box" id="comment" placeholder="Share any thoughts about your preferences..."></textarea>
+  <!-- Screen 12: Pick Top 3 -->
+  <div class="screen" id="screen-top3">
+    <div class="progress-wrap">
+      <div class="progress-label">Step 12 of 13</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:92.3%"></div></div>
+    </div>
+    <h1>Pick Your Top 3 Schedules</h1>
+    <p class="subtitle">Select the 3 schedules you'd most want as your actual schedule.</p>
+    <div class="top3-count" id="top3-count">0 of 3 selected</div>
+    <div class="top3-grid" id="top3-grid"></div>
     <div class="btn-nav">
-      <button class="btn btn-secondary" onclick="backToPatterns()">Back</button>
-      <button class="btn btn-primary" onclick="submitSurvey()">Submit</button>
+      <button class="btn btn-secondary" onclick="S.backFromTop3()">Back</button>
+      <button class="btn btn-primary" id="btn-submit" onclick="S.submit()" disabled>Submit</button>
     </div>
   </div>
 
-  <!-- Screen 4: Result Code -->
+  <!-- Screen 13: Result Code -->
   <div class="screen" id="screen-result">
     <div class="check-circle">&#10003;</div>
-    <h1 style="text-align:center;">Survey Complete &mdash; Thank You!</h1>
-    <p class="subtitle" style="text-align:center;">Copy the code below and send it to your schedule admin via text or email.</p>
+    <h1 style="text-align:center;">Thank You!</h1>
+    <p class="subtitle" style="text-align:center;">Copy the code below and text it to your administrator.</p>
     <div class="code-box" id="result-code"></div>
-    <button class="btn btn-primary" onclick="copyCode()">Copy Code</button>
+    <button class="btn btn-primary" onclick="S.copy()">Copy Code</button>
     <div class="copy-feedback" id="copy-feedback"></div>
     <div class="instructions">
       <strong>Instructions:</strong> Copy the code above and send it to your schedule coordinator via text or email with the subject line: <em>Schedule Survey</em>
@@ -319,314 +324,378 @@ h1 {
 (function() {
   'use strict';
 
-  // ─── Data ───
-  const PATTERNS = [
-    { id: '6on8off',  label: '6 on / 8 off',  on: 6,  off: 8  },
-    { id: '7on9off',  label: '7 on / 9 off',  on: 7,  off: 9  },
-    { id: '5on7off',  label: '5 on / 7 off',  on: 5,  off: 7  },
-    { id: '7on10off', label: '7 on / 10 off', on: 7,  off: 10 },
-    { id: '8on11off', label: '8 on / 11 off', on: 8,  off: 11 },
+  // ─── Pattern Definitions ───
+  var PATTERNS = [
+    { id: '6on8off',  on: 6,  off: 8,  cycle: 14 },
+    { id: '7on9off',  on: 7,  off: 9,  cycle: 16 },
+    { id: '5on7off',  on: 5,  off: 7,  cycle: 12 },
+    { id: '7on10off', on: 7,  off: 10, cycle: 17 },
+    { id: '8on11off', on: 8,  off: 11, cycle: 19 }
   ];
 
-  const FACTORS = [
-    { key: 'wlb',     label: 'Work-Life Balance',        desc: 'How well does this pattern support your personal life?' },
-    { key: 'sleep',   label: 'Sleep / Circadian Rhythm',  desc: 'How manageable is the sleep transition on this pattern?' },
-    { key: 'wknd',    label: 'Weekend / Holiday Fairness', desc: 'How fair is the weekend/holiday distribution?' },
-    { key: 'consec',  label: 'Consecutive Nights',        desc: 'How tolerable is the consecutive night stretch?' },
-    { key: 'predict', label: 'Schedule Predictability',   desc: 'How easy is it to plan your life around this pattern?' },
-  ];
+  var START_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+  // JS getDay(): 0=Sun, 1=Mon, ..., 6=Sat
+  var DAY_INDEX = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
 
-  // ─── State ───
-  let currentPattern = 0;
-  const ratings = {};
-  PATTERNS.forEach(p => { ratings[p.id] = {}; });
-  let ranking = PATTERNS.map(p => p.id);
+  // ─── Generate All 35 Variants ───
+  var ALL_VARIANTS = {};
+  (function buildVariants() {
+    var apr1Day = 3; // April 1, 2026 = Wednesday, getDay()=3
 
-  // ─── Helpers ───
-  function calcNightsYear(p) { return Math.round((p.on / (p.on + p.off)) * 365); }
+    PATTERNS.forEach(function(p) {
+      START_DAYS.forEach(function(sd) {
+        var target = DAY_INDEX[sd];
+        var offset = (target - apr1Day + 7) % 7;
+        var dates = [];
+        var nightsWorked = 0;
+        var blocksWorked = 0;
 
-  function approxWeekendsPerMonth(p) {
-    const cycle = p.on + p.off;
-    // simulate 365 days, count weekend nights (Fri/Sat) that are "on"
-    let wkndOn = 0;
-    for (let d = 0; d < 365; d++) {
-      const posInCycle = d % cycle;
-      const isOn = posInCycle < p.on;
-      const dayOfWeek = d % 7; // 0=Mon for simulation
-      if (isOn && (dayOfWeek === 4 || dayOfWeek === 5)) wkndOn++;
-    }
-    return (wkndOn / 12).toFixed(1);
+        for (var i = 0; i < 91; i++) {
+          var d = new Date(2026, 3, 1 + i);
+          var ds = fmtDate(d);
+          var status;
+
+          if (i < offset) {
+            status = 'pre';
+          } else {
+            var pos = (i - offset) % p.cycle;
+            if (pos < p.on) {
+              status = 'on';
+              nightsWorked++;
+              if (pos === 0) blocksWorked++;
+            } else {
+              status = 'off';
+            }
+          }
+          dates.push({ date: ds, status: status });
+        }
+
+        var vid = p.id + '_' + sd;
+        ALL_VARIANTS[vid] = {
+          variantId: vid,
+          patternId: p.id,
+          startDay: sd.charAt(0).toUpperCase() + sd.slice(1),
+          onDays: p.on,
+          offDays: p.off,
+          cycleLength: p.cycle,
+          dates: dates,
+          nightsWorked: nightsWorked,
+          blocksWorked: blocksWorked
+        };
+      });
+    });
+  })();
+
+  function fmtDate(d) {
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
   }
 
+  // ─── Stratified Random Sampling ───
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function selectTen() {
+    var byPat = {};
+    PATTERNS.forEach(function(p) { byPat[p.id] = []; });
+    var keys = Object.keys(ALL_VARIANTS);
+    keys.forEach(function(k) { byPat[ALL_VARIANTS[k].patternId].push(ALL_VARIANTS[k]); });
+    Object.keys(byPat).forEach(function(k) { shuffle(byPat[k]); });
+
+    // 1 guaranteed from each pattern
+    var selected = [];
+    var cnt = {};
+    PATTERNS.forEach(function(p) {
+      selected.push(byPat[p.id][0]);
+      cnt[p.id] = 1;
+    });
+
+    // remaining pool
+    var remaining = [];
+    PATTERNS.forEach(function(p) {
+      for (var i = 1; i < byPat[p.id].length; i++) {
+        remaining.push(byPat[p.id][i]);
+      }
+    });
+    shuffle(remaining);
+
+    // pick 5 more, max 3 total per pattern
+    var picked = 0;
+    for (var i = 0; i < remaining.length && picked < 5; i++) {
+      var pid = remaining[i].patternId;
+      if ((cnt[pid] || 0) < 3) {
+        selected.push(remaining[i]);
+        cnt[pid] = (cnt[pid] || 0) + 1;
+        picked++;
+      }
+    }
+
+    shuffle(selected);
+    return selected;
+  }
+
+  // ─── State ───
+  var selected = selectTen();
+  var cur = 0;
+  var responses = [];
+  for (var i = 0; i < 10; i++) {
+    responses.push({ overall: 0, accept: null, comment: '' });
+  }
+  var top3 = [];
+
+  // ─── Screen Management ───
   function showScreen(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    var screens = document.querySelectorAll('.screen');
+    for (var i = 0; i < screens.length; i++) screens[i].classList.remove('active');
     document.getElementById('screen-' + id).classList.add('active');
     window.scrollTo(0, 0);
   }
 
-  // ─── Screen 2: Pattern rendering ───
-  function renderPattern(idx) {
-    const p = PATTERNS[idx];
-    const cycle = p.on + p.off;
-    const nightsYr = calcNightsYear(p);
+  // ─── Calendar Rendering ───
+  function renderCalendar(variant) {
+    var months = [
+      { name: 'April 2026',  year: 2026, month: 3, days: 30, dateOffset: 0 },
+      { name: 'May 2026',    year: 2026, month: 4, days: 31, dateOffset: 30 },
+      { name: 'June 2026',   year: 2026, month: 5, days: 30, dateOffset: 61 }
+    ];
+    var hdrs = ['M','T','W','T','F','S','S'];
+    var html = '';
 
-    // Progress
-    document.getElementById('progress-label').textContent = 'Pattern ' + (idx + 1) + ' of 5';
-    document.getElementById('progress-fill').style.width = ((idx + 1) / 5 * 100) + '%';
+    months.forEach(function(m) {
+      var firstDay = new Date(m.year, m.month, 1).getDay(); // 0=Sun
+      var startCol = (firstDay + 6) % 7; // Mon=0..Sun=6
 
-    // Buttons
-    document.getElementById('btn-prev').style.display = idx === 0 ? 'none' : '';
-    updateNextBtn();
+      html += '<div class="cal-month">';
+      html += '<div class="cal-month-label">' + m.name + '</div>';
+      html += '<div class="cal-grid">';
 
-    let html = '';
-
-    // Pattern header
-    html += '<div class="pattern-header">';
-    html += '<div class="pattern-name">' + p.label + '</div>';
-    html += '<div class="pattern-desc">You work ' + p.on + ' consecutive nights, then get ' + p.off + ' nights off. ~' + nightsYr + ' nights/year.</div>';
-    html += '</div>';
-
-    // Cycle strip
-    html += '<div class="cycle-strip">';
-    for (let i = 0; i < cycle; i++) {
-      const cls = i < p.on ? 'on' : 'off';
-      html += '<div class="cycle-day ' + cls + '">' + (i + 1) + '</div>';
-    }
-    html += '</div>';
-    html += '<div class="cycle-legend">' + p.on + ' nights on → ' + p.off + ' off → repeat</div>';
-
-    // Stats
-    html += '<div class="stats-grid">';
-    html += statBox(p.on, 'Consecutive On');
-    html += statBox(p.off, 'Consecutive Off');
-    html += statBox(approxWeekendsPerMonth(p), 'Wknd Nights/Mo');
-    html += statBox(nightsYr, 'Total Nights/Yr');
-    html += '</div>';
-
-    // 8-week mini calendar
-    html += '<div class="mini-cal-title">8-Week Preview</div>';
-    html += '<div class="mini-cal">';
-    var dayHeaders = ['M','T','W','T','F','S','S'];
-    for (var dh = 0; dh < 7; dh++) {
-      html += '<div class="day-header">' + dayHeaders[dh] + '</div>';
-    }
-    for (let d = 0; d < 56; d++) {
-      var posInCycle = d % cycle;
-      var isOn = posInCycle < p.on;
-      html += '<div class="cal-day ' + (isOn ? 'on' : 'off') + '">' + (d + 1) + '</div>';
-    }
-    html += '</div>';
-
-    // Rating section
-    html += '<div class="rating-section">';
-    html += '<div class="rating-title">Rate This Pattern</div>';
-    FACTORS.forEach(function(f) {
-      var val = ratings[p.id][f.key] || 0;
-      html += '<div class="factor-row">';
-      html += '<div class="factor-label">' + f.label + '</div>';
-      html += '<div class="factor-desc">' + f.desc + '</div>';
-      html += '<div class="rating-btns">';
-      for (var r = 1; r <= 5; r++) {
-        var sel = r === val ? ' selected' : '';
-        html += '<button class="rating-btn' + sel + '" data-pattern="' + p.id + '" data-factor="' + f.key + '" data-value="' + r + '" onclick="window._rate(this)">' + r + '</button>';
+      for (var h = 0; h < 7; h++) {
+        html += '<div class="cal-hdr">' + hdrs[h] + '</div>';
       }
+
+      for (var e = 0; e < startCol; e++) {
+        html += '<div class="cal-cell empty"></div>';
+      }
+
+      for (var d = 1; d <= m.days; d++) {
+        var idx = m.dateOffset + d - 1;
+        var st = variant.dates[idx].status;
+        html += '<div class="cal-cell ' + st + '">' + d + '</div>';
+      }
+
       html += '</div></div>';
     });
-    html += '</div>';
 
-    document.getElementById('pattern-content').innerHTML = html;
+    return html;
   }
 
-  function statBox(value, label) {
-    return '<div class="stat-box"><div class="stat-value">' + value + '</div><div class="stat-label">' + label + '</div></div>';
+  // ─── Review Screen ───
+  function renderReview() {
+    window.scrollTo(0, 0);
+    var v = selected[cur];
+    var r = responses[cur];
+    var step = cur + 2; // welcome=1, schedules=2-11, top3=12, result=13
+
+    // Progress
+    document.getElementById('prog-label').textContent =
+      'Schedule ' + (cur + 1) + ' of 10  \u00b7  Step ' + step + ' of 13';
+    document.getElementById('prog-fill').style.width = (step / 13 * 100).toFixed(1) + '%';
+
+    // Back button
+    document.getElementById('btn-back').style.display = cur === 0 ? 'none' : '';
+
+    var html = '';
+
+    // Header
+    html += '<div class="sched-header">';
+    html += '<div class="sched-num">Schedule ' + (cur + 1) + ' of 10</div>';
+    html += '<div class="sched-badge">' + v.onDays + ' on / ' + v.offDays + ' off &mdash; starts ' + v.startDay + '</div>';
+    html += '<div class="sched-stats">' + v.nightsWorked + ' nights worked &middot; ' + v.blocksWorked + ' blocks &middot; ' + v.cycleLength + '-day cycle</div>';
+    html += '</div>';
+
+    // Calendar
+    html += renderCalendar(v);
+
+    // Overall Rating
+    html += '<div class="rating-section">';
+    html += '<div class="rating-title">How would you rate this schedule overall?</div>';
+    html += '<div class="rating-btns">';
+    for (var s = 1; s <= 5; s++) {
+      var sel = s === r.overall ? ' selected' : '';
+      html += '<button class="rating-btn' + sel + '" data-val="' + s + '" onclick="S.rate(' + s + ')">' + s + ' \u2605</button>';
+    }
+    html += '</div></div>';
+
+    // Accept
+    html += '<div class="rating-section">';
+    html += '<div class="rating-title">Would you accept this as your schedule?</div>';
+    html += '<div class="yn-btns">';
+    html += '<button class="yn-btn' + (r.accept === true ? ' sel-yes' : '') + '" onclick="S.accept(true)">Yes</button>';
+    html += '<button class="yn-btn' + (r.accept === false ? ' sel-no' : '') + '" onclick="S.accept(false)">No</button>';
+    html += '</div></div>';
+
+    // Comment
+    html += '<div class="comment-wrap">';
+    html += '<div class="comment-label">Any thoughts on this schedule? (optional)</div>';
+    html += '<textarea class="comment-box" id="comment-input" placeholder="Max 200 characters..." maxlength="200" oninput="S.onComment()">' + escHtml(r.comment) + '</textarea>';
+    html += '<div class="char-count" id="char-count">' + r.comment.length + '/200</div>';
+    html += '</div>';
+
+    document.getElementById('review-content').innerHTML = html;
+    updateNextBtn();
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
   function updateNextBtn() {
-    var p = PATTERNS[currentPattern];
-    var allRated = FACTORS.every(function(f) { return ratings[p.id][f.key]; });
+    var r = responses[cur];
+    var valid = r.overall > 0 && r.accept !== null;
     var btn = document.getElementById('btn-next');
-    btn.disabled = !allRated;
-    btn.textContent = currentPattern === 4 ? 'Continue to Ranking' : 'Next Pattern';
+    btn.disabled = !valid;
+    btn.textContent = cur === 9 ? 'Continue' : 'Next';
   }
 
-  // ─── Rating handler ───
-  window._rate = function(el) {
-    var pid = el.getAttribute('data-pattern');
-    var fkey = el.getAttribute('data-factor');
-    var val = parseInt(el.getAttribute('data-value'));
-    ratings[pid][fkey] = val;
-
-    // Update button states in this row
-    var row = el.parentNode;
-    row.querySelectorAll('.rating-btn').forEach(function(b) {
-      b.classList.toggle('selected', parseInt(b.getAttribute('data-value')) === val);
-    });
-
-    updateNextBtn();
-  };
-
-  // ─── Navigation ───
-  window.startSurvey = function() {
-    currentPattern = 0;
-    showScreen('pattern');
-    renderPattern(0);
-  };
-
-  window.nextPattern = function() {
-    if (currentPattern < 4) {
-      currentPattern++;
-      renderPattern(currentPattern);
-    } else {
-      showRanking();
-    }
-  };
-
-  window.prevPattern = function() {
-    if (currentPattern > 0) {
-      currentPattern--;
-      renderPattern(currentPattern);
-    }
-  };
-
-  // ─── Screen 3: Ranking ───
-  function showRanking() {
-    showScreen('ranking');
-    renderRankList();
-  }
-
-  function renderRankList() {
-    var list = document.getElementById('rank-list');
+  // ─── Top 3 Screen ───
+  function renderTop3() {
     var html = '';
-    ranking.forEach(function(pid, idx) {
-      var p = PATTERNS.find(function(x) { return x.id === pid; });
-      html += '<li class="rank-item" data-idx="' + idx + '">';
-      html += '<div class="rank-num">' + (idx + 1) + '</div>';
-      html += '<div class="rank-label">' + p.label + '</div>';
-      html += '<div class="rank-arrows">';
-      html += '<button class="rank-arrow" onclick="window._moveRank(' + idx + ',-1)"' + (idx === 0 ? ' disabled' : '') + '>&#9650;</button>';
-      html += '<button class="rank-arrow" onclick="window._moveRank(' + idx + ',1)"' + (idx === 4 ? ' disabled' : '') + '>&#9660;</button>';
-      html += '</div></li>';
+    selected.forEach(function(v, i) {
+      var r = responses[i];
+      var isSel = top3.indexOf(v.variantId) >= 0;
+      html += '<div class="top3-card' + (isSel ? ' selected' : '') + '" onclick="S.toggleTop3(\'' + v.variantId + '\')">';
+      html += '<div class="top3-num">' + (i + 1) + '</div>';
+      html += '<div class="top3-info">';
+      html += '<div class="top3-label">' + v.onDays + ' on / ' + v.offDays + ' off</div>';
+      html += '<div class="top3-detail">Starts ' + v.startDay + ' \u00b7 ' + starsStr(r.overall) + ' \u00b7 ' + (r.accept ? 'Yes' : 'No') + '</div>';
+      html += '</div>';
+      html += '<div class="top3-check">&#10003;</div>';
+      html += '</div>';
     });
-    list.innerHTML = html;
-
-    // Touch drag support
-    setupDragAndDrop();
+    document.getElementById('top3-grid').innerHTML = html;
+    document.getElementById('top3-count').textContent = top3.length + ' of 3 selected';
+    document.getElementById('btn-submit').disabled = top3.length !== 3;
   }
 
-  window._moveRank = function(idx, dir) {
-    var newIdx = idx + dir;
-    if (newIdx < 0 || newIdx > 4) return;
-    var temp = ranking[idx];
-    ranking[idx] = ranking[newIdx];
-    ranking[newIdx] = temp;
-    renderRankList();
-  };
-
-  function setupDragAndDrop() {
-    var items = document.querySelectorAll('.rank-item');
-    var dragIdx = -1;
-
-    items.forEach(function(item, i) {
-      item.setAttribute('draggable', 'true');
-
-      item.addEventListener('dragstart', function(e) {
-        dragIdx = i;
-        item.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      });
-
-      item.addEventListener('dragend', function() {
-        item.classList.remove('dragging');
-        items.forEach(function(it) { it.classList.remove('drag-over'); });
-      });
-
-      item.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        item.classList.add('drag-over');
-      });
-
-      item.addEventListener('dragleave', function() {
-        item.classList.remove('drag-over');
-      });
-
-      item.addEventListener('drop', function(e) {
-        e.preventDefault();
-        if (dragIdx !== i && dragIdx >= 0) {
-          var moved = ranking.splice(dragIdx, 1)[0];
-          ranking.splice(i, 0, moved);
-          renderRankList();
-        }
-      });
-    });
-
-    // Touch drag
-    var touchStartIdx = -1;
-    var touchY = 0;
-
-    items.forEach(function(item, i) {
-      item.addEventListener('touchstart', function(e) {
-        touchStartIdx = i;
-        touchY = e.touches[0].clientY;
-      }, { passive: true });
-
-      item.addEventListener('touchmove', function(e) {
-        e.preventDefault();
-      }, { passive: false });
-
-      item.addEventListener('touchend', function(e) {
-        if (touchStartIdx < 0) return;
-        var endY = e.changedTouches[0].clientY;
-        var diff = endY - touchY;
-        if (Math.abs(diff) > 30) {
-          var dir = diff > 0 ? 1 : -1;
-          window._moveRank(touchStartIdx, dir);
-        }
-        touchStartIdx = -1;
-      });
-    });
+  function starsStr(n) {
+    var s = '';
+    for (var i = 1; i <= 5; i++) s += i <= n ? '\u2605' : '\u2606';
+    return s;
   }
 
-  window.backToPatterns = function() {
-    currentPattern = 4;
-    showScreen('pattern');
-    renderPattern(4);
-  };
+  // ─── Public API ───
+  window.S = {
+    start: function() {
+      cur = 0;
+      showScreen('review');
+      renderReview();
+    },
 
-  // ─── Screen 4: Submit ───
-  window.submitSurvey = function() {
-    var data = {
-      v: 1,
-      ts: new Date().toISOString(),
-      ratings: ratings,
-      ranking: ranking,
-      comment: document.getElementById('comment').value.trim()
-    };
+    rate: function(val) {
+      responses[cur].overall = val;
+      var btns = document.querySelectorAll('.rating-btn');
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle('selected', parseInt(btns[i].getAttribute('data-val')) === val);
+      }
+      updateNextBtn();
+    },
 
-    // Base64 encode with UTF-8 support
-    var json = JSON.stringify(data);
-    var encoded;
-    try {
-      encoded = btoa(unescape(encodeURIComponent(json)));
-    } catch (e) {
-      encoded = btoa(json);
-    }
+    accept: function(val) {
+      responses[cur].accept = val;
+      var btns = document.querySelectorAll('.yn-btn');
+      btns[0].className = 'yn-btn' + (val === true ? ' sel-yes' : '');
+      btns[1].className = 'yn-btn' + (val === false ? ' sel-no' : '');
+      updateNextBtn();
+    },
 
-    document.getElementById('result-code').textContent = encoded;
-    document.getElementById('copy-feedback').textContent = '';
-    showScreen('result');
-  };
+    onComment: function() {
+      var el = document.getElementById('comment-input');
+      responses[cur].comment = el.value;
+      document.getElementById('char-count').textContent = el.value.length + '/200';
+    },
 
-  window.copyCode = function() {
-    var code = document.getElementById('result-code').textContent;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(code).then(function() {
-        showCopyFeedback();
-      }).catch(function() {
+    next: function() {
+      if (cur < 9) {
+        cur++;
+        renderReview();
+      } else {
+        top3 = [];
+        showScreen('top3');
+        renderTop3();
+      }
+    },
+
+    back: function() {
+      if (cur > 0) {
+        cur--;
+        renderReview();
+      }
+    },
+
+    backFromTop3: function() {
+      cur = 9;
+      showScreen('review');
+      renderReview();
+    },
+
+    toggleTop3: function(vid) {
+      var idx = top3.indexOf(vid);
+      if (idx >= 0) {
+        top3.splice(idx, 1);
+      } else if (top3.length < 3) {
+        top3.push(vid);
+      }
+      renderTop3();
+    },
+
+    submit: function() {
+      var data = {
+        surveyVersion: '2.0',
+        timestamp: new Date().toISOString(),
+        variantsPresented: selected.map(function(v) { return v.variantId; }),
+        ratings: selected.map(function(v, i) {
+          return {
+            variantId: v.variantId,
+            patternId: v.patternId,
+            startDay: v.startDay,
+            overall: responses[i].overall,
+            accept: responses[i].accept,
+            comment: responses[i].comment
+          };
+        }),
+        top3: top3
+      };
+
+      var json = JSON.stringify(data);
+      var encoded;
+      try {
+        encoded = btoa(unescape(encodeURIComponent(json)));
+      } catch (e) {
+        encoded = btoa(json);
+      }
+
+      document.getElementById('result-code').textContent = encoded;
+      document.getElementById('copy-feedback').textContent = '';
+      showScreen('result');
+    },
+
+    copy: function() {
+      var code = document.getElementById('result-code').textContent;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function() {
+          showCopyFeedback();
+        }).catch(function() {
+          fallbackCopy(code);
+        });
+      } else {
         fallbackCopy(code);
-      });
-    } else {
-      fallbackCopy(code);
+      }
     }
   };
 
