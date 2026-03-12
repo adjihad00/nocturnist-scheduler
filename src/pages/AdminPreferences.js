@@ -347,24 +347,20 @@ export default function AdminPreferences() {
       if (mostDayCounts[d] > topMostCount) { topMost = d; topMostCount = mostDayCounts[d]; }
     });
 
-    // Time rankings
-    const startRankAvg = {};
-    START_TIMES.forEach(t => { startRankAvg[t] = 0; });
+    // Time rankings — count how many picked each as #1
+    const startFirstCounts = {};
+    START_TIMES.forEach(t => { startFirstCounts[t] = 0; });
     responses.forEach(r => {
-      if (r.times?.start_rank) {
-        r.times.start_rank.forEach((t, i) => { if (startRankAvg[t] !== undefined) startRankAvg[t] += (i + 1); });
-      }
+      const first = r.times?.start_rank?.[0];
+      if (first && startFirstCounts[first] !== undefined) startFirstCounts[first]++;
     });
-    START_TIMES.forEach(t => { startRankAvg[t] = n > 0 ? startRankAvg[t] / n : 0; });
 
-    const endRankAvg = {};
-    END_TIMES.forEach(t => { endRankAvg[t] = 0; });
+    const endFirstCounts = {};
+    END_TIMES.forEach(t => { endFirstCounts[t] = 0; });
     responses.forEach(r => {
-      if (r.times?.end_rank) {
-        r.times.end_rank.forEach((t, i) => { if (endRankAvg[t] !== undefined) endRankAvg[t] += (i + 1); });
-      }
+      const first = r.times?.end_rank?.[0];
+      if (first && endFirstCounts[first] !== undefined) endFirstCounts[first]++;
     });
-    END_TIMES.forEach(t => { endRankAvg[t] = n > 0 ? endRankAvg[t] / n : 0; });
 
     // Hospital popularity
     const hospPopularity = {};
@@ -415,33 +411,22 @@ export default function AdminPreferences() {
       }
     });
 
-    // ─── NEW: Motivator Rankings ───
-    const motivatorRankAvg = {};
-    MOTIVATOR_KEYS.forEach(k => { motivatorRankAvg[k] = 0; });
-    let motivatorCount = 0;
+    // ─── Motivator Rankings — count by rank position ───
+    const motivatorRankCounts = {};
+    MOTIVATOR_KEYS.forEach(k => { motivatorRankCounts[k] = { 1: 0, 2: 0, 3: 0, 4: 0 }; });
     responses.forEach(r => {
       if (r.collaboration?.motivator_rank) {
-        motivatorCount++;
         r.collaboration.motivator_rank.forEach((k, i) => {
-          if (motivatorRankAvg[k] !== undefined) motivatorRankAvg[k] += (i + 1);
+          if (motivatorRankCounts[k]) motivatorRankCounts[k][i + 1]++;
         });
       }
     });
-    MOTIVATOR_KEYS.forEach(k => { motivatorRankAvg[k] = motivatorCount > 0 ? motivatorRankAvg[k] / motivatorCount : 0; });
 
     // Find if any motivator is ranked #1 by majority
-    const motivatorFirstCounts = {};
-    MOTIVATOR_KEYS.forEach(k => { motivatorFirstCounts[k] = 0; });
-    responses.forEach(r => {
-      if (r.collaboration?.motivator_rank?.[0]) {
-        const first = r.collaboration.motivator_rank[0];
-        if (motivatorFirstCounts[first] !== undefined) motivatorFirstCounts[first]++;
-      }
-    });
     let motivatorConsensus = null;
     MOTIVATOR_KEYS.forEach(k => {
-      if (motivatorFirstCounts[k] > n / 2) {
-        motivatorConsensus = { key: k, count: motivatorFirstCounts[k] };
+      if (motivatorRankCounts[k][1] > n / 2) {
+        motivatorConsensus = { key: k, count: motivatorRankCounts[k][1] };
       }
     });
 
@@ -498,27 +483,22 @@ export default function AdminPreferences() {
     const splitBlockCounts = countYMN(responses, r => r.collaboration?.weekend?.split_block_for_weekend);
     const worseHospCounts = countYMN(responses, r => r.collaboration?.weekend?.worse_hospital_for_weekend);
 
-    // Weekend night priority (avg rank)
-    const weekendNightAvg = { friday: 0, saturday: 0, sunday: 0 };
-    let weekendNightCount = 0;
+    // Weekend night priority — count by rank position
+    const weekendNightCounts = { friday: { 1: 0, 2: 0, 3: 0 }, saturday: { 1: 0, 2: 0, 3: 0 }, sunday: { 1: 0, 2: 0, 3: 0 } };
     responses.forEach(r => {
       if (r.collaboration?.weekend?.weekend_night_rank) {
-        weekendNightCount++;
         r.collaboration.weekend.weekend_night_rank.forEach((k, i) => {
-          if (weekendNightAvg[k] !== undefined) weekendNightAvg[k] += (i + 1);
+          if (weekendNightCounts[k]) weekendNightCounts[k][i + 1]++;
         });
       }
     });
-    ['friday', 'saturday', 'sunday'].forEach(k => {
-      weekendNightAvg[k] = weekendNightCount > 0 ? weekendNightAvg[k] / weekendNightCount : 0;
-    });
-    // Find most valued weekend night
+    // Find most valued weekend night (most #1 picks)
     let bestWeekendNight = 'saturday';
-    let bestWeekendNightAvg = 99;
+    let bestWeekendNightCount = 0;
     ['friday', 'saturday', 'sunday'].forEach(k => {
-      if (weekendNightAvg[k] > 0 && weekendNightAvg[k] < bestWeekendNightAvg) {
+      if (weekendNightCounts[k][1] > bestWeekendNightCount) {
         bestWeekendNight = k;
-        bestWeekendNightAvg = weekendNightAvg[k];
+        bestWeekendNightCount = weekendNightCounts[k][1];
       }
     });
 
@@ -528,12 +508,12 @@ export default function AdminPreferences() {
       avgMaxConsec: avg(maxConsec), rangeMaxConsec: range(maxConsec),
       avgMinRecovery: avg(minRecovery), rangeMinRecovery: range(minRecovery),
       leastDayCounts, mostDayCounts, topLeast, topLeastCount, topMost, topMostCount,
-      startRankAvg, endRankAvg,
+      startFirstCounts, endFirstCounts,
       hospPopularity, avgCommute, altCounts,
       holidayCounts, topHoliday, topHolidayCount,
       swapCounts,
       // New
-      motivatorRankAvg, motivatorConsensus,
+      motivatorRankCounts, motivatorConsensus,
       desirCounts, strongestDesir, strongestDesirCount,
       avgMaxExtra: avg(maxExtraVals), medianMaxExtra: median(maxExtraVals),
       avgMinNotice: avg(minNoticeVals), medianMinNotice: median(minNoticeVals),
@@ -541,7 +521,7 @@ export default function AdminPreferences() {
       fullBlockCounts, tradeFlexCounts, prefBlockCounts,
       weekendHist, avgMinWeekends: avg(minWeekendVals),
       extraWeeknightCounts, splitBlockCounts, worseHospCounts,
-      weekendNightAvg, bestWeekendNight, bestWeekendNightAvg,
+      weekendNightCounts, bestWeekendNight, bestWeekendNightCount,
     };
   }, [responses]);
 
@@ -552,12 +532,14 @@ export default function AdminPreferences() {
   // Chart data
   const startTimeData = useMemo(() => {
     if (!agg) return [];
-    return START_TIMES.map(t => ({ name: t, avg: Number(agg.startRankAvg[t].toFixed(2)) }));
+    return START_TIMES.map(t => ({ name: t, count: agg.startFirstCounts[t] }))
+      .sort((a, b) => b.count - a.count);
   }, [agg]);
 
   const endTimeData = useMemo(() => {
     if (!agg) return [];
-    return END_TIMES.map(t => ({ name: t, avg: Number(agg.endRankAvg[t].toFixed(2)) }));
+    return END_TIMES.map(t => ({ name: t, count: agg.endFirstCounts[t] }))
+      .sort((a, b) => b.count - a.count);
   }, [agg]);
 
   const hospPopData = useMemo(() => {
@@ -594,7 +576,10 @@ export default function AdminPreferences() {
     if (!agg) return [];
     return MOTIVATOR_KEYS.map(k => ({
       name: MOTIVATOR_LABELS[k],
-      avg: Number(agg.motivatorRankAvg[k].toFixed(2)),
+      '#1': agg.motivatorRankCounts[k][1],
+      '#2': agg.motivatorRankCounts[k][2],
+      '#3': agg.motivatorRankCounts[k][3],
+      '#4': agg.motivatorRankCounts[k][4],
     }));
   }, [agg]);
 
@@ -620,7 +605,9 @@ export default function AdminPreferences() {
     if (!agg) return [];
     return ['friday', 'saturday', 'sunday'].map(k => ({
       name: WEEKEND_NIGHT_LABELS[k],
-      avg: Number(agg.weekendNightAvg[k].toFixed(2)),
+      '#1': agg.weekendNightCounts[k][1],
+      '#2': agg.weekendNightCounts[k][2],
+      '#3': agg.weekendNightCounts[k][3],
     }));
   }, [agg]);
 
@@ -799,42 +786,54 @@ export default function AdminPreferences() {
               <h2 style={s.h2}>Time Preferences</h2>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                 <div>
-                  <h3 style={s.h3}>Avg Start Time Rank (1=best)</h3>
+                  <h3 style={s.h3}>Preferred Start Time</h3>
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={startTimeData}>
                       <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} />
-                      <YAxis domain={[0, 4]} tick={{ fill: '#8888aa', fontSize: 11 }} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="avg" fill="#a855f7" radius={[4, 4, 0, 0]} />
+                      <YAxis allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} physician${v !== 1 ? 's' : ''}`, '#1 pick']} />
+                      <Bar dataKey="count" fill="#a855f7" radius={[4, 4, 0, 0]}>
+                        {startTimeData.map((entry, i) => (
+                          <Cell key={i} fill={i === 0 ? '#a855f7' : '#4a3a6a'} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
                 <div>
-                  <h3 style={s.h3}>Avg End Time Rank (1=best)</h3>
+                  <h3 style={s.h3}>Preferred End Time</h3>
                   <ResponsiveContainer width="100%" height={180}>
                     <BarChart data={endTimeData}>
                       <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} />
-                      <YAxis domain={[0, 4]} tick={{ fill: '#8888aa', fontSize: 11 }} />
-                      <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="avg" fill="#f472b6" radius={[4, 4, 0, 0]} />
+                      <YAxis allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                      <Tooltip contentStyle={tooltipStyle} formatter={(v) => [`${v} physician${v !== 1 ? 's' : ''}`, '#1 pick']} />
+                      <Bar dataKey="count" fill="#f472b6" radius={[4, 4, 0, 0]}>
+                        {endTimeData.map((entry, i) => (
+                          <Cell key={i} fill={i === 0 ? '#f472b6' : '#6a3a5a'} />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </div>
               {(() => {
-                const startVals = Object.values(agg.startRankAvg);
-                const endVals = Object.values(agg.endRankAvg);
-                const startSpread = Math.max(...startVals) - Math.min(...startVals);
-                const endSpread = Math.max(...endVals) - Math.min(...endVals);
-                const startConsensus = startSpread < 0.8;
-                const endConsensus = endSpread < 0.8;
-                if (startConsensus || endConsensus) {
+                const startTop = startTimeData[0];
+                const endTop = endTimeData[0];
+                if (startTop?.count > 0 || endTop?.count > 0) {
                   return (
-                    <div style={{ ...s.callout, marginTop: 8, borderColor: '#12b886' }}>
-                      <div style={{ fontSize: 12, color: '#12b886', fontWeight: 600 }}>
-                        {startConsensus && 'Strong consensus on start time. '}
-                        {endConsensus && 'Strong consensus on end time.'}
-                      </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
+                      {startTop?.count > 0 && (
+                        <div style={s.callout}>
+                          <div style={{ fontSize: 10, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.5 }}>Top Start Time</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f4fa' }}>{startTop.name} ({startTop.count} of {agg.n})</div>
+                        </div>
+                      )}
+                      {endTop?.count > 0 && (
+                        <div style={s.callout}>
+                          <div style={{ fontSize: 10, color: '#f472b6', textTransform: 'uppercase', letterSpacing: 0.5 }}>Top End Time</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f4fa' }}>{endTop.name} ({endTop.count} of {agg.n})</div>
+                        </div>
+                      )}
                     </div>
                   );
                 }
@@ -938,13 +937,17 @@ export default function AdminPreferences() {
                   </ResponsiveContainer>
                 </div>
                 <div>
-                  <h3 style={s.h3}>Motivator Rankings (avg rank, 1=best)</h3>
+                  <h3 style={s.h3}>Motivator Rankings</h3>
                   <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={motivatorData}>
-                      <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} />
-                      <YAxis domain={[0, 4]} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                    <BarChart data={motivatorData} layout="vertical">
+                      <XAxis type="number" allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                      <YAxis type="category" dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} width={75} />
                       <Tooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="avg" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                      <Legend wrapperStyle={{ fontSize: 11 }} />
+                      <Bar dataKey="#1" stackId="a" fill="#12b886" />
+                      <Bar dataKey="#2" stackId="a" fill="#3ba4e0" />
+                      <Bar dataKey="#3" stackId="a" fill="#fbbf24" />
+                      <Bar dataKey="#4" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                   {agg.motivatorConsensus && (
@@ -1049,18 +1052,21 @@ export default function AdminPreferences() {
                 <SmallPie title="Worse Hospital for Weekend" data={ymnPieData(agg.worseHospCounts)} />
               </div>
 
-              <h3 style={{ ...s.h3, marginTop: 16 }}>Weekend Night Priority (avg rank, 1=best)</h3>
+              <h3 style={{ ...s.h3, marginTop: 16 }}>Weekend Night Priority</h3>
               <ResponsiveContainer width="100%" height={150}>
                 <BarChart data={weekendNightData}>
                   <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} />
-                  <YAxis domain={[0, 3]} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                  <YAxis allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="avg" fill="#f472b6" radius={[4, 4, 0, 0]} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="#1" stackId="a" fill="#12b886" />
+                  <Bar dataKey="#2" stackId="a" fill="#3ba4e0" />
+                  <Bar dataKey="#3" stackId="a" fill="#fbbf24" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               <div style={s.callout}>
                 <div style={{ fontSize: 12, color: '#f472b6', fontWeight: 600 }}>
-                  Most valued weekend night: {WEEKEND_NIGHT_LABELS[agg.bestWeekendNight]} (avg rank {agg.bestWeekendNightAvg.toFixed(1)})
+                  Most valued weekend night: {WEEKEND_NIGHT_LABELS[agg.bestWeekendNight]} ({agg.bestWeekendNightCount} of {agg.n} ranked it #1)
                 </div>
               </div>
             </div>
