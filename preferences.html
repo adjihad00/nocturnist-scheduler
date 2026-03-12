@@ -217,23 +217,25 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
       <p style="margin-bottom:20px">How do you prefer your on/off schedule blocks?</p>
 
       <div class="field">
-        <label class="field-label">Preferred nights ON per block</label>
+        <label class="field-label">How many nights in a row do you prefer to work?</label>
         <div class="slider-wrap">
           <span style="font-size:12px;color:var(--text3)">3</span>
           <input type="range" min="3" max="10" value="6" id="nightsOn">
           <span style="font-size:12px;color:var(--text3)">10</span>
           <span class="slider-val" id="nightsOnVal">6</span>
         </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:6px">Drag to select your preferred consecutive working nights per block</p>
       </div>
 
       <div class="field">
-        <label class="field-label">Preferred days OFF per block</label>
+        <label class="field-label">How many days off in a row do you prefer to have?</label>
         <div class="slider-wrap">
           <span style="font-size:12px;color:var(--text3)">5</span>
           <input type="range" min="5" max="14" value="8" id="daysOff">
           <span style="font-size:12px;color:var(--text3)">14</span>
           <span class="slider-val" id="daysOffVal">8</span>
         </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:6px">Drag to select your preferred consecutive days off between blocks</p>
       </div>
 
       <div class="field">
@@ -636,21 +638,94 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
     </div>
   </div>
 
-  <!-- Screen 8: Review -->
+  <!-- Screen 8: Schedule Duration Preferences -->
   <div class="screen" id="screen8">
+    <div class="card">
+      <h2>Schedule Duration Preferences</h2>
+
+      <!-- Section A: Template Length -->
+      <div class="field">
+        <label class="field-label">How far in advance would you like your schedule locked in?</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">A templated schedule repeats the same pattern. Longer templates mean more predictability but less flexibility to adjust.</p>
+        <div class="swap-options" id="templateLengthOptions">
+          <div class="swap-opt" data-val="12mo" onclick="selectOpt('templateLengthOptions','templateLength','12mo')">
+            <div class="radio"></div>
+            <div><div class="swap-label">12 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Full year locked in. Maximum predictability.</div></div>
+          </div>
+          <div class="swap-opt" data-val="6mo" onclick="selectOpt('templateLengthOptions','templateLength','6mo')">
+            <div class="radio"></div>
+            <div><div class="swap-label">6 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Half-year blocks, locked in 6 months ahead.</div></div>
+          </div>
+          <div class="swap-opt" data-val="4mo" onclick="selectOpt('templateLengthOptions','templateLength','4mo')">
+            <div class="radio"></div>
+            <div><div class="swap-label">4 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Trimester blocks, locked in 6 months ahead.</div></div>
+          </div>
+          <div class="swap-opt" data-val="3mo" onclick="selectOpt('templateLengthOptions','templateLength','3mo')">
+            <div class="radio"></div>
+            <div><div class="swap-label">3 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Quarterly blocks, locked in 6 months ahead.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Section B: Team Switch Likelihood -->
+      <div class="field">
+        <label class="field-label">If the schedule were divided into shorter blocks, how likely would you be to accept a templated schedule knowing you could switch teams between blocks?</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Example: You're on Team A (Jan&ndash;Mar) with a pattern that gives you fewer weekends off. For Apr&ndash;Jun, you switch to Team C which gives you better weekends. Teams rotate so everyone gets fair access over time.</p>
+        <div class="three-btn-row" id="teamSwitchRow">
+          <button class="three-btn" data-val="1" onclick="selectTeamSwitch(1)">Very unlikely</button>
+          <button class="three-btn" data-val="2" onclick="selectTeamSwitch(2)">Unlikely</button>
+          <button class="three-btn" data-val="3" onclick="selectTeamSwitch(3)">Neutral</button>
+          <button class="three-btn" data-val="4" onclick="selectTeamSwitch(4)">Likely</button>
+          <button class="three-btn" data-val="5" onclick="selectTeamSwitch(5)">Very likely</button>
+        </div>
+      </div>
+
+      <!-- Section C: Preferred Switch Block (conditional) -->
+      <div id="switchBlockSection" style="display:none">
+        <hr class="section-divider">
+        <div class="field">
+          <label class="field-label">If team switching were available, what block length would you prefer?</label>
+          <div class="swap-options" id="switchBlockOptions">
+            <div class="swap-opt" data-val="3mo" onclick="selectOpt('switchBlockOptions','preferredSwitchBlock','3mo')">
+              <div class="radio"></div>
+              <div><div class="swap-label">3 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Quarterly rotations &mdash; most flexibility</div></div>
+            </div>
+            <div class="swap-opt" data-val="4mo" onclick="selectOpt('switchBlockOptions','preferredSwitchBlock','4mo')">
+              <div class="radio"></div>
+              <div><div class="swap-label">4 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Trimester rotations &mdash; moderate flexibility</div></div>
+            </div>
+            <div class="swap-opt" data-val="6mo" onclick="selectOpt('switchBlockOptions','preferredSwitchBlock','6mo')">
+              <div class="radio"></div>
+              <div><div class="swap-label">6 months</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Semi-annual rotations &mdash; less frequent changes</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="screen8Err" style="color:var(--red);font-size:13px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(7)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="validateScreen8()">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 9: Review -->
+  <div class="screen" id="screen9">
     <div class="card">
       <h2>Review Your Responses</h2>
       <p style="margin-bottom:16px">Please confirm everything looks correct before submitting.</p>
       <div id="reviewContent"></div>
     </div>
     <div style="display:flex;gap:12px">
-      <button class="btn btn-secondary" onclick="goScreen(7)">Back</button>
+      <button class="btn btn-secondary" onclick="goScreen(8)">Back</button>
       <button class="btn btn-primary" style="flex:1" onclick="submitSurvey()">Submit</button>
     </div>
   </div>
 
-  <!-- Screen 9: Confirmation -->
-  <div class="screen" id="screen9">
+  <!-- Screen 10: Confirmation -->
+  <div class="screen" id="screen10">
     <div style="text-align:center;margin-bottom:20px">
       <div style="font-size:48px;margin-bottom:8px">&#10003;</div>
       <h1 style="margin-bottom:4px">Preferences Submitted!</h1>
@@ -713,13 +788,16 @@ var WEEKEND_NIGHTS = [
 ];
 
 var ADMIN_EMAIL = 'kydiazdo@gmail.com';
-var TOTAL_SCREENS = 9;
+var TOTAL_SCREENS = 10;
 
 // ─── STATE ───
 var currentScreen = 1;
 var state = {
   physician: '',
   block: { nights_on: 6, days_off: 8, max_consecutive: 7, min_recovery: 5 },
+  templateLength: '',
+  teamSwitchLikelihood: 0,
+  preferredSwitchBlock: null,
   days: { least_desired: '', most_desired: '' },
   times: { start_rank: START_TIMES.slice(), end_rank: END_TIMES.slice() },
   locations: { top3: ['','',''], alternate: '', percentages: {}, commute_minutes: {} },
@@ -1046,6 +1124,8 @@ window.selectOpt = function(containerId, stateKey, val) {
     state.collaboration.block_swap[stateKey] = val;
   } else if (stateKey === 'extra_weeknight_for_weekend' || stateKey === 'split_block_for_weekend' || stateKey === 'worse_hospital_for_weekend') {
     state.collaboration.weekend[stateKey] = val;
+  } else if (stateKey === 'templateLength' || stateKey === 'preferredSwitchBlock') {
+    state[stateKey] = val;
   }
   document.querySelectorAll('#' + containerId + ' .swap-opt').forEach(function(el) {
     el.classList.toggle('selected', el.dataset.val === val);
@@ -1055,7 +1135,7 @@ window.selectOpt = function(containerId, stateKey, val) {
 // ─── NAVIGATION ───
 window.goScreen = function(n) {
   if (n === 4) buildCommuteInputs();
-  if (n === 8) buildReview();
+  if (n === 9) buildReview();
 
   document.querySelectorAll('.screen').forEach(function(el) { el.classList.remove('active'); });
   document.getElementById('screen' + n).classList.add('active');
@@ -1066,20 +1146,20 @@ window.goScreen = function(n) {
 
 function updateProgress() {
   var wrap = document.getElementById('progressWrap');
-  if (currentScreen >= 2 && currentScreen <= 8) {
+  if (currentScreen >= 2 && currentScreen <= 9) {
     wrap.style.display = '';
     var steps = document.getElementById('progressSteps');
     steps.innerHTML = '';
-    var labels = ['Block','Day/Time','Location','Holidays','Swap','Block/Wknd','Review'];
-    for (var i = 0; i < 7; i++) {
+    var labels = ['Block','Day/Time','Location','Holidays','Swap','Block/Wknd','Duration','Review'];
+    for (var i = 0; i < 8; i++) {
       var s = document.createElement('div');
       s.className = 'progress-step';
-      var screenIdx = i + 2; // screens 2-8
+      var screenIdx = i + 2; // screens 2-9
       if (screenIdx < currentScreen) s.classList.add('done');
       else if (screenIdx === currentScreen) s.classList.add('active');
       steps.appendChild(s);
     }
-    document.getElementById('progressLabel').textContent = 'Step ' + (currentScreen - 1) + ' of 7 \u2014 ' + labels[currentScreen - 2];
+    document.getElementById('progressLabel').textContent = 'Step ' + (currentScreen - 1) + ' of 8 \u2014 ' + labels[currentScreen - 2];
   } else {
     wrap.style.display = 'none';
   }
@@ -1201,6 +1281,45 @@ window.validateScreen7 = function() {
   goScreen(8);
 };
 
+// ─── SCREEN 8: TEAM SWITCH / DURATION ───
+window.selectTeamSwitch = function(val) {
+  state.teamSwitchLikelihood = val;
+  document.querySelectorAll('#teamSwitchRow .three-btn').forEach(function(btn) {
+    btn.classList.toggle('selected', parseInt(btn.dataset.val) === val);
+  });
+  var section = document.getElementById('switchBlockSection');
+  if (val >= 3) {
+    section.style.display = '';
+  } else {
+    section.style.display = 'none';
+    state.preferredSwitchBlock = null;
+    document.querySelectorAll('#switchBlockOptions .swap-opt').forEach(function(el) {
+      el.classList.remove('selected');
+    });
+  }
+};
+
+window.validateScreen8 = function() {
+  var err = document.getElementById('screen8Err');
+  if (!state.templateLength) {
+    err.textContent = 'Please select your preferred template length.';
+    err.style.display = '';
+    return;
+  }
+  if (!state.teamSwitchLikelihood) {
+    err.textContent = 'Please rate your likelihood of accepting team switching.';
+    err.style.display = '';
+    return;
+  }
+  if (state.teamSwitchLikelihood >= 3 && !state.preferredSwitchBlock) {
+    err.textContent = 'Please select your preferred block length for team switching.';
+    err.style.display = '';
+    return;
+  }
+  err.style.display = 'none';
+  goScreen(9);
+};
+
 // ─── REVIEW ───
 function buildReview() {
   var c = document.getElementById('reviewContent');
@@ -1261,6 +1380,16 @@ function buildReview() {
       ['Weekend night rank', state.collaboration.weekend.weekend_night_rank.map(function(k) { return k.charAt(0).toUpperCase() + k.slice(1); }).join(' > ')],
       ['Worse hospital for weekend', ymnLabels[state.collaboration.weekend.worse_hospital_for_weekend] || '']
     ]);
+
+  var templateLabels = { '12mo': '12 months', '6mo': '6 months', '4mo': '4 months', '3mo': '3 months' };
+  var likelihoodLabels = { 1: 'Very unlikely', 2: 'Unlikely', 3: 'Neutral', 4: 'Likely', 5: 'Very likely' };
+  var switchBlockLabels = { '3mo': '3 months', '4mo': '4 months', '6mo': '6 months' };
+
+  c.innerHTML += reviewSection('Schedule Duration Preferences', 8, [
+    ['Template Length', templateLabels[state.templateLength] || ''],
+    ['Team Switch Likelihood', likelihoodLabels[state.teamSwitchLikelihood] || ''],
+    ['Preferred Switch Block', state.preferredSwitchBlock ? switchBlockLabels[state.preferredSwitchBlock] : 'N/A']
+  ]);
 }
 
 function reviewSection(title, screenNum, rows) {
@@ -1291,7 +1420,10 @@ window.submitSurvey = function() {
     locations: state.locations,
     holidays: state.holidays,
     availability: state.availability,
-    collaboration: state.collaboration
+    collaboration: state.collaboration,
+    templateLength: state.templateLength,
+    teamSwitchLikelihood: state.teamSwitchLikelihood,
+    preferredSwitchBlock: state.preferredSwitchBlock
   };
 
   var json = JSON.stringify(payload);
@@ -1308,7 +1440,7 @@ window.submitSurvey = function() {
   // Save to localStorage
   try { localStorage.setItem('nocturnist_preferences', json); } catch(e) {}
 
-  goScreen(9);
+  goScreen(10);
 };
 
 // ─── COPY ───

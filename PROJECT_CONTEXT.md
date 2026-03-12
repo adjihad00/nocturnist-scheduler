@@ -134,6 +134,7 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
     - Constraints: max extra consecutive nights (0-5), min notice days (1-30), hospital flexibility, extra shift willingness
     - Block swap: full block willingness, trade flexibility, preferred block trade
     - Weekend: min weekends off/mo (0-4), extra weeknight for weekend, split block, weekend night rank, worse hospital for weekend
+    - Schedule duration: template length (12mo/6mo/4mo/3mo), team switch likelihood (1-5 Likert), preferred switch block length (3mo/4mo/6mo, conditional on likelihood >= 3)
 13. **Holiday options:** New Year's Eve, New Year's Day, Easter, Memorial Day, Independence Day, Labor Day, Halloween, Veterans Day
 14. **Coding done in Claude Code** — tracked via GitHub repo `nocturnist-scheduler`
 15. **Spreadsheet maintained separately** — for admin's own analysis/manipulation
@@ -158,7 +159,7 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 ### Phase 2B: Named Preference Survey ✅ COMPLETE
 **Spec file:** `PREFERENCES_SPEC.md`
 - `preferences.html` — standalone offline file, dark theme, mobile responsive
-- 9 screens: physician dropdown → block prefs (sliders) → day/time (buttons + rank lists) → location (hospital dropdowns + commute inputs) → holidays (tap-to-rank) → swap & collaboration (willingness + motivator rank + desirability factors + constraints) → block & weekend swaps (block swap prefs + weekend prefs + weekend night rank) → review summary → Base64 code + mailto link
+- 10 screens: physician dropdown → block prefs (sliders) → day/time (buttons + rank lists) → location (hospital dropdowns + commute inputs) → holidays (tap-to-rank) → swap & collaboration (willingness + motivator rank + desirability factors + constraints) → block & weekend swaps (block swap prefs + weekend prefs + weekend night rank) → schedule duration preferences (template length + team switch likelihood + preferred switch block) → review summary → Base64 code + mailto link
 - Admin import at `/admin/preferences` — paste codes, submitted/missing tracker (X of 19), aggregate dashboard (block histograms, day heatmap with callouts, time rank charts with consensus indicator, hospital popularity + avg commute, holiday ranking, swap willingness pie chart, motivator rankings bar chart, desirability stacked bars, constraints summary, block swap summary, weekend summary with night priority), individual physician view, CSV/JSON export
 - localStorage key: `nocturnist_preferences`
 
