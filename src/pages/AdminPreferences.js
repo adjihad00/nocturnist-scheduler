@@ -33,6 +33,9 @@ const HOSP_FLEX_LABELS = { same_only: 'Same only', assigned_only: 'Assigned', an
 const YMN_LABELS = { yes: 'Yes', maybe: 'Maybe', no: 'No' };
 const TRADE_FLEX_LABELS = { equal_only: 'Equal only', flexible: 'Flexible' };
 const WEEKEND_NIGHT_LABELS = { friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday' };
+const IMP_LABELS = { flexible: 'Flexible', important: 'Important', hard_limit: 'Hard limit' };
+const IMP_KEYS = ['nights_on', 'days_off', 'max_consecutive', 'min_recovery'];
+const IMP_FIELD_LABELS = { nights_on: 'Nights On', days_off: 'Days Off', max_consecutive: 'Max Consecutive', min_recovery: 'Min Recovery' };
 
 function loadResponses() {
   try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
@@ -120,11 +123,16 @@ function IndividualView({ data }) {
       <div style={{ fontSize: 18, fontWeight: 800, color: '#f0f4fa', marginBottom: 4 }}>{data.physician}</div>
       <div style={{ fontSize: 11, color: '#6666aa', marginBottom: 16 }}>Submitted {new Date(data.ts).toLocaleDateString()}</div>
 
+      <Section title="Workload">
+        <Row label="FTE" value={data.fte != null ? data.fte : undefined} />
+        <Row label="Shifts/month" value={data.shiftsPerMonth != null ? data.shiftsPerMonth : undefined} />
+      </Section>
+
       <Section title="Block Preferences">
-        <Row label="Nights on" value={data.block?.nights_on} />
-        <Row label="Days off" value={data.block?.days_off} />
-        <Row label="Max consecutive" value={data.block?.max_consecutive} />
-        <Row label="Min recovery" value={data.block?.min_recovery} />
+        <Row label="Nights on" value={data.block?.nights_on != null ? `${data.block.nights_on}${data.block?.importance?.nights_on ? ` (${IMP_LABELS[data.block.importance.nights_on]})` : ''}` : undefined} />
+        <Row label="Days off" value={data.block?.days_off != null ? `${data.block.days_off}${data.block?.importance?.days_off ? ` (${IMP_LABELS[data.block.importance.days_off]})` : ''}` : undefined} />
+        <Row label="Max consecutive" value={data.block?.max_consecutive != null ? `${data.block.max_consecutive}${data.block?.importance?.max_consecutive ? ` (${IMP_LABELS[data.block.importance.max_consecutive]})` : ''}` : undefined} />
+        <Row label="Min recovery" value={data.block?.min_recovery != null ? `${data.block.min_recovery}${data.block?.importance?.min_recovery ? ` (${IMP_LABELS[data.block.importance.min_recovery]})` : ''}` : undefined} />
       </Section>
 
       <Section title="Day & Time">
@@ -144,7 +152,12 @@ function IndividualView({ data }) {
 
       <Section title="Holidays & Availability">
         <Row label="Top 3 holidays" value={data.holidays?.top3?.join(', ')} />
-        <Row label="Vacation/blackout" value={data.availability?.vacation_blackout || 'None'} />
+        <Row label="Blackout dates" value={
+          data.availability?.blackout_ranges?.length
+            ? data.availability.blackout_ranges.map(r => `${r.start || '?'}–${r.end || '?'}${r.label ? ` (${r.label})` : ''}`).join('; ')
+            : (data.availability?.vacation_blackout || 'None')
+        } />
+        <Row label="Scheduling notes" value={data.availability?.vacation_notes || 'None'} />
         <Row label="Family obligations" value={data.availability?.family_obligations || 'None'} />
       </Section>
 
@@ -308,10 +321,12 @@ export default function AdminPreferences() {
   const exportCSV = useCallback(() => {
     const header = [
       'Physician','Timestamp','Nights On','Days Off','Max Consecutive','Min Recovery',
+      'FTE','Shifts/Month',
+      'Imp: Nights On','Imp: Days Off','Imp: Max Consecutive','Imp: Min Recovery',
       'Least Desired Day','Most Desired Day','Start Rank','End Rank',
       'Hospital 1','Hospital 2','Hospital 3','Alternate',
       'Holiday 1','Holiday 2','Holiday 3',
-      'Vacation/Blackout','Family Obligations',
+      'Blackout Dates','Scheduling Notes','Family Obligations',
       'Swap Willingness','Motivator Rank',
       'Desir: Location','Desir: Time','Desir: Avoid Day','Desir: Longer Off',
       'Max Extra Consec','Min Notice Days','Hospital Flexibility','Extra Shift Premium',
@@ -327,11 +342,18 @@ export default function AdminPreferences() {
       return [
         r.physician, r.ts,
         r.block?.nights_on, r.block?.days_off, r.block?.max_consecutive, r.block?.min_recovery,
+        r.fte != null ? r.fte : '', r.shiftsPerMonth != null ? r.shiftsPerMonth : '',
+        IMP_LABELS[r.block?.importance?.nights_on] || '', IMP_LABELS[r.block?.importance?.days_off] || '',
+        IMP_LABELS[r.block?.importance?.max_consecutive] || '', IMP_LABELS[r.block?.importance?.min_recovery] || '',
         r.days?.least_desired, r.days?.most_desired,
         r.times?.start_rank?.join(' > '), r.times?.end_rank?.join(' > '),
         r.locations?.top3?.[0], r.locations?.top3?.[1], r.locations?.top3?.[2], r.locations?.alternate,
         r.holidays?.top3?.[0], r.holidays?.top3?.[1], r.holidays?.top3?.[2],
-        r.availability?.vacation_blackout, r.availability?.family_obligations,
+        r.availability?.blackout_ranges?.length
+          ? r.availability.blackout_ranges.map(range => `${range.start || '?'}-${range.end || '?'}${range.label ? ' (' + range.label + ')' : ''}`).join('; ')
+          : (r.availability?.vacation_blackout || ''),
+        r.availability?.vacation_notes || '',
+        r.availability?.family_obligations,
         c.swap_willingness, c.motivator_rank?.join(' > '),
         d.preferred_location, d.preferred_time, d.avoid_day, d.longer_off,
         con.max_extra_consecutive, con.min_notice_days, con.hospital_flexibility, con.extra_shift_premium,
@@ -371,6 +393,40 @@ export default function AdminPreferences() {
 
     const nightsOnHist = histogram(nightsOn, 3, 10);
     const daysOffHist = histogram(daysOff, 5, 14);
+
+    // FTE distribution
+    const fteCounts = {};
+    responses.forEach(r => {
+      if (r.fte != null) {
+        const key = String(r.fte);
+        fteCounts[key] = (fteCounts[key] || 0) + 1;
+      }
+    });
+    const fteData = Object.entries(fteCounts)
+      .map(([fte, count]) => ({ name: `${fte} FTE`, value: count }))
+      .sort((a, b) => parseFloat(b.name) - parseFloat(a.name));
+
+    // Shifts/month
+    const shiftsVals = responses.map(r => r.shiftsPerMonth).filter(v => v != null);
+    const shiftsHist = histogram(shiftsVals, 8, 22);
+    const avgShifts = avg(shiftsVals);
+
+    // Importance distribution
+    const impCounts = {};
+    IMP_KEYS.forEach(k => { impCounts[k] = { flexible: 0, important: 0, hard_limit: 0 }; });
+    responses.forEach(r => {
+      if (r.block?.importance) {
+        IMP_KEYS.forEach(k => {
+          const v = r.block.importance[k];
+          if (v && impCounts[k][v] !== undefined) impCounts[k][v]++;
+        });
+      }
+    });
+
+    // Blackout date stats
+    const physiciansWithBlackout = responses.filter(r => r.availability?.blackout_ranges?.length > 0).length;
+    const totalBlackoutRanges = responses.reduce((sum, r) => sum + (r.availability?.blackout_ranges?.length || 0), 0);
+    const avgBlackoutRanges = physiciansWithBlackout > 0 ? totalBlackoutRanges / physiciansWithBlackout : 0;
 
     // Day heatmap
     const leastDayCounts = {};
@@ -545,6 +601,9 @@ export default function AdminPreferences() {
 
     return {
       n, submitted, missing,
+      fteData, shiftsHist, avgShifts,
+      impCounts,
+      physiciansWithBlackout, avgBlackoutRanges,
       nightsOnHist, daysOffHist,
       avgMaxConsec: avg(maxConsec), rangeMaxConsec: range(maxConsec),
       avgMinRecovery: avg(minRecovery), rangeMinRecovery: range(minRecovery),
@@ -763,6 +822,47 @@ export default function AdminPreferences() {
         {/* Aggregate Dashboard */}
         {tab === 'aggregate' && agg && (
           <>
+            {/* Workload */}
+            <div style={s.card}>
+              <h2 style={s.h2}>Workload</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <h3 style={s.h3}>FTE Distribution</h3>
+                  {agg.fteData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={180}>
+                      <PieChart>
+                        <Pie data={agg.fteData} dataKey="value" nameKey="name" cx="50%" cy="50%"
+                          innerRadius={35} outerRadius={60}
+                          label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                          {agg.fteData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip contentStyle={tooltipStyle} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : <div style={{ color: '#6666aa', fontSize: 12, padding: 20 }}>No FTE data yet</div>}
+                </div>
+                <div>
+                  <h3 style={s.h3}>Target Shifts/Month</h3>
+                  {agg.shiftsHist.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={180}>
+                      <BarChart data={agg.shiftsHist}>
+                        <XAxis dataKey="label" tick={{ fill: '#8888aa', fontSize: 11 }} />
+                        <YAxis allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                        <Tooltip contentStyle={tooltipStyle} />
+                        <Bar dataKey="count" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : <div style={{ color: '#6666aa', fontSize: 12, padding: 20 }}>No shifts data yet</div>}
+                  {agg.avgShifts > 0 && (
+                    <div style={s.callout}>
+                      <div style={{ fontSize: 10, color: '#06b6d4', textTransform: 'uppercase', letterSpacing: 0.5 }}>Average</div>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f4fa' }}>{agg.avgShifts.toFixed(1)} shifts/month</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Block Preferences */}
             <div style={s.card}>
               <h2 style={s.h2}>Block Preferences</h2>
@@ -801,6 +901,29 @@ export default function AdminPreferences() {
                   <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f4fa' }}>avg {agg.avgMinRecovery.toFixed(1)}</div>
                   <div style={{ fontSize: 11, color: '#8888aa' }}>range {agg.rangeMinRecovery[0]}–{agg.rangeMinRecovery[1]}</div>
                 </div>
+              </div>
+              <h3 style={{ ...s.h3, marginTop: 16 }}>Constraint Importance</h3>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th style={{ padding: '6px 8px', textAlign: 'left', fontSize: 11, color: '#8888aa', borderBottom: '1px solid #2a2a40' }}>Constraint</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, color: '#12b886', borderBottom: '1px solid #2a2a40' }}>Flexible</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, color: '#fbbf24', borderBottom: '1px solid #2a2a40' }}>Important</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'center', fontSize: 11, color: '#ef4444', borderBottom: '1px solid #2a2a40' }}>Hard Limit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {IMP_KEYS.map(k => (
+                      <tr key={k} style={{ borderBottom: '1px solid #1a1a30' }}>
+                        <td style={{ padding: '6px 8px', textAlign: 'left', color: '#c0c0d0', fontWeight: 600, fontSize: 12 }}>{IMP_FIELD_LABELS[k]}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center', color: '#12b886', fontSize: 13, fontWeight: 700 }}>{agg.impCounts[k].flexible}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center', color: '#fbbf24', fontSize: 13, fontWeight: 700 }}>{agg.impCounts[k].important}</td>
+                        <td style={{ padding: '6px 8px', textAlign: 'center', color: '#ef4444', fontSize: 13, fontWeight: 700 }}>{agg.impCounts[k].hard_limit}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
 
@@ -954,6 +1077,17 @@ export default function AdminPreferences() {
                 <div style={{ fontSize: 16, fontWeight: 700, color: '#f0f4fa' }}>
                   {agg.topHoliday} ({agg.topHolidayCount} of {agg.n})
                 </div>
+              </div>
+              <div style={{ ...s.callout, marginTop: 8 }}>
+                <div style={{ fontSize: 10, color: '#a855f7', textTransform: 'uppercase', letterSpacing: 0.5 }}>Blackout Dates</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#f0f4fa' }}>
+                  {agg.physiciansWithBlackout} of {agg.n} physicians have blackout dates
+                </div>
+                {agg.physiciansWithBlackout > 0 && (
+                  <div style={{ fontSize: 11, color: '#8888aa' }}>
+                    avg {agg.avgBlackoutRanges.toFixed(1)} ranges per physician (among those with blackouts)
+                  </div>
+                )}
               </div>
             </div>
 

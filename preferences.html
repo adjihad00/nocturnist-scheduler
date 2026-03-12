@@ -177,6 +177,30 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
 /* Section divider */
 .section-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.blackout-row{
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  flex-wrap:wrap;
+}
+.blackout-row input[type=date]{
+  flex:1;min-width:120px;padding:10px 8px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  font-size:13px;font-family:inherit;
+  color-scheme:dark;
+}
+.blackout-row input[type=date]:focus{outline:none;border-color:var(--accent)}
+.blackout-row input[type=text]{
+  flex:1.5;min-width:100px;padding:10px 8px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  font-size:13px;font-family:inherit;
+}
+.blackout-row input[type=text]:focus{outline:none;border-color:var(--accent)}
+.blackout-remove{
+  background:none;border:1px solid var(--border);color:var(--red);
+  border-radius:8px;cursor:pointer;font-size:18px;font-weight:700;
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all 0.15s;font-family:inherit;
+}
+.blackout-remove:active{background:var(--red);color:#fff;border-color:var(--red)}
 
 @media(max-width:400px){
   .container{padding:16px 12px 32px}
@@ -236,6 +260,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
           <span class="slider-val" id="nightsOnVal">6</span>
         </div>
         <p style="font-size:12px;color:var(--text3);margin-top:6px">Drag to select your preferred consecutive working nights per block</p>
+        <div class="three-btn-row" id="constraint_nights_on" style="margin-top:8px"></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">How firm is this preference?</p>
       </div>
 
       <div class="field">
@@ -247,6 +273,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
           <span class="slider-val" id="daysOffVal">8</span>
         </div>
         <p style="font-size:12px;color:var(--text3);margin-top:6px">Drag to select your preferred consecutive days off between blocks</p>
+        <div class="three-btn-row" id="constraint_days_off" style="margin-top:8px"></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">How firm is this preference?</p>
       </div>
 
       <div class="field">
@@ -257,6 +285,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
           <span style="font-size:12px;color:var(--text3)">14</span>
           <span class="slider-val" id="maxConsecVal">7</span>
         </div>
+        <div class="three-btn-row" id="constraint_max_consecutive" style="margin-top:8px"></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">How firm is this preference?</p>
       </div>
 
       <div class="field">
@@ -266,6 +296,50 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
           <input type="range" min="3" max="14" value="5" id="minRecovery">
           <span style="font-size:12px;color:var(--text3)">14</span>
           <span class="slider-val" id="minRecoveryVal">5</span>
+        </div>
+        <div class="three-btn-row" id="constraint_min_recovery" style="margin-top:8px"></div>
+        <p style="font-size:11px;color:var(--text3);margin-top:4px">How firm is this preference?</p>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field">
+        <label class="field-label">What is your FTE status?</label>
+        <div class="swap-options" id="fteOptions">
+          <div class="swap-opt" data-val="1.0" onclick="selectFTE('1.0')">
+            <div class="radio"></div>
+            <div><div class="swap-label">1.0 FTE (full time)</div></div>
+          </div>
+          <div class="swap-opt" data-val="0.9" onclick="selectFTE('0.9')">
+            <div class="radio"></div>
+            <div><div class="swap-label">0.9 FTE</div></div>
+          </div>
+          <div class="swap-opt" data-val="0.8" onclick="selectFTE('0.8')">
+            <div class="radio"></div>
+            <div><div class="swap-label">0.8 FTE</div></div>
+          </div>
+          <div class="swap-opt" data-val="0.75" onclick="selectFTE('0.75')">
+            <div class="radio"></div>
+            <div><div class="swap-label">0.75 FTE</div></div>
+          </div>
+          <div class="swap-opt" data-val="other" onclick="selectFTE('other')">
+            <div class="radio"></div>
+            <div><div class="swap-label">Other</div></div>
+          </div>
+        </div>
+        <div id="fteOtherWrap" style="display:none;margin-top:8px">
+          <input type="number" id="fteOtherVal" min="0.1" max="1.0" step="0.05" placeholder="e.g. 0.6" style="max-width:140px">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Target shifts per month</label>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:8px">How many night shifts do you expect to work in a typical month?</p>
+        <div class="slider-wrap">
+          <span style="font-size:12px;color:var(--text3)">8</span>
+          <input type="range" min="8" max="22" value="15" id="shiftsPerMonth">
+          <span style="font-size:12px;color:var(--text3)">22</span>
+          <span class="slider-val" id="shiftsPerMonthVal">15</span>
         </div>
       </div>
     </div>
@@ -369,7 +443,14 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
       <div class="field">
         <label class="field-label">Planned vacation / blackout dates</label>
-        <textarea id="vacationDates" placeholder="e.g., June 10-17, August 1-5, Dec 20-Jan 2"></textarea>
+        <p style="font-size:12px;color:var(--text3);margin-bottom:10px">Add each date range you need off. Tap "+ Add dates" for each block.</p>
+        <div id="blackoutList"></div>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="addBlackoutRow()">+ Add dates</button>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Additional scheduling notes</label>
+        <textarea id="vacationNotes" placeholder="Anything that doesn't fit above — e.g., pending dates, recurring commitments, etc."></textarea>
       </div>
 
       <div class="field">
@@ -834,7 +915,10 @@ async function submitToGoogleSheet(source, version, respondentId, base64Payload)
 var currentScreen = 1;
 var state = {
   physician: '',
-  block: { nights_on: 6, days_off: 8, max_consecutive: 7, min_recovery: 5 },
+  fte: '1.0',
+  fteOther: null,
+  shiftsPerMonth: 15,
+  block: { nights_on: 6, days_off: 8, max_consecutive: 7, min_recovery: 5, importance: { nights_on: '', days_off: '', max_consecutive: '', min_recovery: '' } },
   templateLength: '',
   teamSwitchLikelihood: 0,
   preferredSwitchBlock: null,
@@ -842,7 +926,7 @@ var state = {
   times: { start_rank: START_TIMES.slice(), end_rank: END_TIMES.slice() },
   locations: { top3: ['','',''], alternate: '', percentages: {}, commute_minutes: {} },
   holidays: { top3: [] },
-  availability: { vacation_blackout: '', family_obligations: '' },
+  availability: { blackout_ranges: [], vacation_notes: '', family_obligations: '' },
   collaboration: {
     swap_willingness: '',
     motivator_rank: MOTIVATOR_ITEMS.map(function(m) { return m.key; }),
@@ -893,6 +977,19 @@ function init() {
   setupSlider('daysOff', 'daysOffVal', function(v) { state.block.days_off = v; });
   setupSlider('maxConsec', 'maxConsecVal', function(v) { state.block.max_consecutive = v; });
   setupSlider('minRecovery', 'minRecoveryVal', function(v) { state.block.min_recovery = v; });
+
+  // FTE + shifts
+  setupSlider('shiftsPerMonth', 'shiftsPerMonthVal', function(v) { state.shiftsPerMonth = v; });
+  document.getElementById('fteOtherVal').addEventListener('input', function() {
+    state.fteOther = parseFloat(this.value) || null;
+  });
+
+  // Constraint importance toggles
+  ['nights_on','days_off','max_consecutive','min_recovery'].forEach(function(key) {
+    buildConstraintImportance('constraint_' + key, function(v) {
+      state.block.importance[key] = v;
+    });
+  });
 
   // Day buttons
   buildDayButtons('leastDayRow', function(d) { state.days.least_desired = d; updateDayButtons(); });
@@ -1148,6 +1245,72 @@ function renderHolidays() {
 }
 
 // ─── SWAP / OPTION SELECTION ───
+window.selectFTE = function(val) {
+  state.fte = val;
+  document.querySelectorAll('#fteOptions .swap-opt').forEach(function(el) {
+    el.classList.toggle('selected', el.dataset.val === val);
+  });
+  document.getElementById('fteOtherWrap').style.display = val === 'other' ? '' : 'none';
+};
+
+function buildConstraintImportance(containerId, onChange) {
+  var container = document.getElementById(containerId);
+  var options = [
+    { val: 'flexible', label: 'Flexible' },
+    { val: 'important', label: 'Important' },
+    { val: 'hard_limit', label: 'Hard limit' }
+  ];
+  options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'three-btn';
+    btn.textContent = opt.label;
+    btn.dataset.val = opt.val;
+    btn.addEventListener('click', function() {
+      container.querySelectorAll('.three-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+      onChange(opt.val);
+    });
+    container.appendChild(btn);
+  });
+}
+
+window.addBlackoutRow = function() {
+  var id = 'bo_' + Date.now();
+  state.availability.blackout_ranges.push({ id: id, start: '', end: '', label: '' });
+  renderBlackoutList();
+};
+
+window.removeBlackoutRow = function(id) {
+  state.availability.blackout_ranges = state.availability.blackout_ranges.filter(function(r) { return r.id !== id; });
+  renderBlackoutList();
+};
+
+function renderBlackoutList() {
+  var container = document.getElementById('blackoutList');
+  container.innerHTML = '';
+  state.availability.blackout_ranges.forEach(function(range) {
+    var div = document.createElement('div');
+    div.className = 'blackout-row';
+    div.innerHTML =
+      '<input type="date" data-field="start" data-id="' + range.id + '" value="' + range.start + '">' +
+      '<span style="color:var(--text3);font-size:12px;flex-shrink:0">to</span>' +
+      '<input type="date" data-field="end" data-id="' + range.id + '" value="' + range.end + '">' +
+      '<input type="text" data-field="label" data-id="' + range.id + '" placeholder="Label (optional)" value="' + (range.label || '') + '" style="max-width:140px">' +
+      '<button class="blackout-remove" onclick="removeBlackoutRow(\'' + range.id + '\')">&times;</button>';
+
+    div.querySelectorAll('input').forEach(function(input) {
+      input.addEventListener('change', function() {
+        var rid = this.dataset.id;
+        var field = this.dataset.field;
+        var entry = state.availability.blackout_ranges.find(function(r) { return r.id === rid; });
+        if (entry) entry[field] = this.value;
+      });
+    });
+
+    container.appendChild(div);
+  });
+}
+
 window.selectSwap = function(val) {
   state.collaboration.swap_willingness = val;
   document.querySelectorAll('#swapOptions .swap-opt').forEach(function(el) {
@@ -1246,6 +1409,14 @@ window.validateScreen4 = function() {
 
 window.validateScreen5 = function() {
   var err = document.getElementById('screen5Err');
+  var hasIncomplete = state.availability.blackout_ranges.some(function(r) {
+    return (r.start && !r.end) || (!r.start && r.end);
+  });
+  if (hasIncomplete) {
+    err.textContent = 'Each blackout range needs both a start and end date.';
+    err.style.display = '';
+    return;
+  }
   if (state.holidays.top3.length < 3) {
     err.textContent = 'Please select your top 3 holidays (' + state.holidays.top3.length + ' of 3 selected).';
     err.style.display = '';
@@ -1373,13 +1544,19 @@ function buildReview() {
 
   var motLabels = { time_off: 'Time off', location: 'Location', rhythm: 'Schedule rhythm', money: 'Money' };
 
+  var impLabels = { flexible: 'Flexible', important: 'Important', hard_limit: 'Hard limit' };
+
   c.innerHTML = '' +
     reviewSection('Physician', 1, [['Name', state.physician]]) +
+    reviewSection('Workload', 2, [
+      ['FTE', state.fte === 'other' ? (state.fteOther || 'Not entered') : state.fte],
+      ['Shifts/month', state.shiftsPerMonth]
+    ]) +
     reviewSection('Block Preferences', 2, [
-      ['Nights on', state.block.nights_on],
-      ['Days off', state.block.days_off],
-      ['Max consecutive', state.block.max_consecutive],
-      ['Min recovery', state.block.min_recovery]
+      ['Nights on', state.block.nights_on + ' (' + (impLabels[state.block.importance.nights_on] || 'unset') + ')'],
+      ['Days off', state.block.days_off + ' (' + (impLabels[state.block.importance.days_off] || 'unset') + ')'],
+      ['Max consecutive', state.block.max_consecutive + ' (' + (impLabels[state.block.importance.max_consecutive] || 'unset') + ')'],
+      ['Min recovery', state.block.min_recovery + ' (' + (impLabels[state.block.importance.min_recovery] || 'unset') + ')']
     ]) +
     reviewSection('Day & Time', 3, [
       ['Most desired start day', state.days.most_desired],
@@ -1395,7 +1572,12 @@ function buildReview() {
     ]) +
     reviewSection('Holidays', 5, [
       ['Top 3', state.holidays.top3.join(', ')],
-      ['Vacation', state.availability.vacation_blackout || 'None'],
+      ['Blackout dates', state.availability.blackout_ranges.length > 0
+        ? state.availability.blackout_ranges.map(function(r) {
+            return (r.start || '?') + ' to ' + (r.end || '?') + (r.label ? ' (' + r.label + ')' : '');
+          }).join('; ')
+        : 'None'],
+      ['Notes', state.availability.vacation_notes || 'None'],
       ['Family', state.availability.family_obligations || 'None']
     ]) +
     reviewSection('Swap & Collaboration', 6, [
@@ -1446,7 +1628,7 @@ function reviewSection(title, screenNum, rows) {
 // ─── SUBMIT ───
 window.submitSurvey = async function() {
   // Gather free text
-  state.availability.vacation_blackout = document.getElementById('vacationDates').value.trim();
+  state.availability.vacation_notes = document.getElementById('vacationNotes').value.trim();
   state.availability.family_obligations = document.getElementById('familyObligations').value.trim();
 
   var payload = {
@@ -1454,6 +1636,8 @@ window.submitSurvey = async function() {
     type: 'preferences',
     ts: new Date().toISOString(),
     physician: state.physician,
+    fte: state.fte === 'other' ? state.fteOther : parseFloat(state.fte),
+    shiftsPerMonth: state.shiftsPerMonth,
     block: state.block,
     days: state.days,
     times: state.times,
