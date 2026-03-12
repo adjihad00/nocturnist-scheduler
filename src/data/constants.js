@@ -99,3 +99,6 @@ export const PHYSICIANS = [
 ];
 
 export const START_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+// Google Apps Script endpoint for fetching responses from the sheet
+export const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwoCoRMYIEHBZzYEpt0YqEBxcDBfoqSAMmQGUaHXvyFN6maDU1sv7fk-ZhgtwqPvuTx/exec";

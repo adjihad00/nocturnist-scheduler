@@ -35,7 +35,46 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: "alive" }))
-    .setMimeType(ContentService.MimeType.JSON);
+  try {
+    var sheetName = (e && e.parameter && e.parameter.sheet) ? e.parameter.sheet : null;
+
+    if (!sheetName) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: "alive" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: "error", message: "Sheet '" + sheetName + "' not found" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var data = sheet.getDataRange().getValues();
+    if (data.length <= 1) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: "ok", rows: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var headers = data[0];
+    var rows = [];
+    for (var i = 1; i < data.length; i++) {
+      var row = {};
+      for (var j = 0; j < headers.length; j++) {
+        row[headers[j]] = data[i][j];
+      }
+      rows.push(row);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "ok", rows: rows }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: "error", message: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }

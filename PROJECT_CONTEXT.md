@@ -150,6 +150,7 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 14. **Coding done in Claude Code** — tracked via GitHub repo `nocturnist-scheduler`
 15. **Spreadsheet maintained separately** — for admin's own analysis/manipulation
 16. **Auto-submit via Google Apps Script** — both survey.html and preferences.html POST to a Google Apps Script web app that appends rows to a Google Sheet. Uses `no-cors` mode + `text/plain` Content-Type to avoid CORS preflight. Config in `config.js`. Manual copy/email fallback preserved.
+17. **Admin fetch from Google Sheet** — both admin pages (AdminImport, AdminPreferences) have a "Fetch from Google Sheet" button that calls the Apps Script `doGet(?sheet=...)` endpoint, decodes each row's Base64 payload, and imports into localStorage. Deduplicates by timestamp (survey) or physician name with latest-wins (preferences).
 
 ---
 

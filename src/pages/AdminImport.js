@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router';
-import { PATTERNS, START_DAYS, TOTAL_MDS } from '../data/constants';
+import { PATTERNS, START_DAYS, TOTAL_MDS, APPS_SCRIPT_URL } from '../data/constants';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   Cell,
@@ -44,6 +44,7 @@ export default function AdminImport() {
   const [inputCode, setInputCode] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [fetching, setFetching] = useState(false);
 
   const addResponse = useCallback(() => {
     setError(''); setSuccess('');
@@ -70,6 +71,39 @@ export default function AdminImport() {
       saveResponses([]);
       setResponses([]);
     }
+  }, []);
+
+  const fetchFromSheet = useCallback(async () => {
+    setError(''); setSuccess(''); setFetching(true);
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?sheet=survey');
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Fetch failed');
+      if (!json.rows || !json.rows.length) {
+        setSuccess('No rows found in the survey sheet.');
+        setFetching(false);
+        return;
+      }
+      const existing = loadResponses();
+      let added = 0;
+      json.rows.forEach(row => {
+        try {
+          const data = decodePayload(row.payload);
+          const ts = data.timestamp || data.ts;
+          const dup = existing.find(r => (r.timestamp || r.ts) === ts);
+          if (!dup) {
+            existing.push(data);
+            added++;
+          }
+        } catch { /* skip invalid rows */ }
+      });
+      saveResponses(existing);
+      setResponses([...existing]);
+      setSuccess(`Fetched ${json.rows.length} rows from Google Sheet. ${added} new response(s) imported.`);
+    } catch (err) {
+      setError('Fetch failed: ' + err.message);
+    }
+    setFetching(false);
   }, []);
 
   const exportJSON = useCallback(() => {
@@ -293,6 +327,13 @@ export default function AdminImport() {
               disabled={!inputCode.trim()}
             >
               Add Response
+            </button>
+            <button
+              style={{ ...s.btn, ...s.btnSecondary, background: 'linear-gradient(135deg, #0f7b5f, #12b886)', color: '#fff', border: 'none', opacity: fetching ? 0.6 : 1 }}
+              onClick={fetchFromSheet}
+              disabled={fetching}
+            >
+              {fetching ? 'Fetching...' : '⬇ Fetch from Google Sheet'}
             </button>
             <span style={{ fontSize: 14, color: '#8888aa', fontWeight: 600 }}>
               {responses.length} of {TOTAL_MDS} responses imported

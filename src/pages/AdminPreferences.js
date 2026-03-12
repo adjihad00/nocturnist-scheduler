@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router';
-import { PHYSICIANS, HOSPITALS, TOTAL_MDS } from '../data/constants';
+import { PHYSICIANS, HOSPITALS, TOTAL_MDS, APPS_SCRIPT_URL } from '../data/constants';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   Cell, PieChart, Pie,
@@ -228,6 +228,7 @@ export default function AdminPreferences() {
   const [success, setSuccess] = useState('');
   const [viewPhysician, setViewPhysician] = useState('');
   const [tab, setTab] = useState('aggregate');
+  const [fetching, setFetching] = useState(false);
 
   const addResponse = useCallback(() => {
     setError(''); setSuccess('');
@@ -255,6 +256,46 @@ export default function AdminPreferences() {
       saveResponses([]);
       setResponses([]);
     }
+  }, []);
+
+  const fetchFromSheet = useCallback(async () => {
+    setError(''); setSuccess(''); setFetching(true);
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?sheet=preferences');
+      const json = await res.json();
+      if (json.status !== 'ok') throw new Error(json.message || 'Fetch failed');
+      if (!json.rows || !json.rows.length) {
+        setSuccess('No rows found in the preferences sheet.');
+        setFetching(false);
+        return;
+      }
+      const existing = loadResponses();
+      let added = 0, updated = 0;
+      json.rows.forEach(row => {
+        try {
+          const data = decodePayload(row.payload);
+          const dup = existing.findIndex(r => r.physician === data.physician);
+          if (dup >= 0) {
+            // Keep the latest submission (compare timestamps)
+            const existingTs = new Date(existing[dup].ts).getTime();
+            const newTs = new Date(data.ts).getTime();
+            if (newTs > existingTs) {
+              existing[dup] = data;
+              updated++;
+            }
+          } else {
+            existing.push(data);
+            added++;
+          }
+        } catch { /* skip invalid rows */ }
+      });
+      saveResponses(existing);
+      setResponses([...existing]);
+      setSuccess(`Fetched ${json.rows.length} rows from Google Sheet. ${added} new, ${updated} updated.`);
+    } catch (err) {
+      setError('Fetch failed: ' + err.message);
+    }
+    setFetching(false);
   }, []);
 
   const exportJSON = useCallback(() => {
@@ -644,6 +685,13 @@ export default function AdminPreferences() {
           <div style={{ display: 'flex', gap: 12, marginTop: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <button style={{ ...s.btn, ...s.btnPrimary }} onClick={addResponse} disabled={!inputCode.trim()}>
               Import
+            </button>
+            <button
+              style={{ ...s.btn, ...s.btnSecondary, background: 'linear-gradient(135deg, #0f7b5f, #12b886)', color: '#fff', border: 'none', opacity: fetching ? 0.6 : 1 }}
+              onClick={fetchFromSheet}
+              disabled={fetching}
+            >
+              {fetching ? 'Fetching...' : '⬇ Fetch from Google Sheet'}
             </button>
             <span style={{ fontSize: 14, color: '#8888aa', fontWeight: 600 }}>
               {responses.length} of {TOTAL_MDS} received
