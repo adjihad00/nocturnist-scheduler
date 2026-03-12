@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router';
-import { PATTERNS, RATING_FACTORS, TOTAL_MDS } from '../data/constants';
+import { PATTERNS, START_DAYS, TOTAL_MDS } from '../data/constants';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer,
   Cell,
@@ -21,12 +21,23 @@ function saveResponses(arr) {
 function decodePayload(code) {
   const json = decodeURIComponent(escape(atob(code.trim())));
   const data = JSON.parse(json);
-  if (data.v !== 1 || !data.ratings || !data.ranking) throw new Error('Invalid schema');
-  return data;
+  // Support v2.1 (14 ratings, 9 patterns) and v2.0 (10 ratings, 5 patterns)
+  if (data.surveyVersion === '2.1' || data.surveyVersion === '2.0') {
+    if (!data.ratings || !data.top3) throw new Error('Invalid v2.x schema');
+    return data;
+  }
+  // Legacy v1
+  if (data.v === 1 && data.ratings && data.ranking) {
+    return data;
+  }
+  throw new Error('Unknown schema');
 }
 
-const COLORS = ['#3ba4e0', '#12b886', '#fbbf24', '#ef4444', '#a855f7'];
-const FACTOR_COLORS = ['#3ba4e0', '#12b886', '#fbbf24', '#ef4444', '#a855f7'];
+function isV2(data) {
+  return data.surveyVersion === '2.0' || data.surveyVersion === '2.1';
+}
+
+const COLORS = ['#3ba4e0', '#12b886', '#fbbf24', '#ef4444', '#a855f7', '#f97316', '#06b6d4', '#ec4899', '#84cc16'];
 
 export default function AdminImport() {
   const [responses, setResponses] = useState(loadResponses);
@@ -39,7 +50,8 @@ export default function AdminImport() {
     try {
       const data = decodePayload(inputCode);
       const existing = loadResponses();
-      const dup = existing.find(r => r.ts === data.ts);
+      const ts = data.timestamp || data.ts;
+      const dup = existing.find(r => (r.timestamp || r.ts) === ts);
       if (dup) {
         if (!window.confirm('A response with this timestamp already exists. Add anyway?')) return;
       }
@@ -47,7 +59,7 @@ export default function AdminImport() {
       saveResponses(updated);
       setResponses(updated);
       setInputCode('');
-      setSuccess('Response #' + updated.length + ' imported.');
+      setSuccess('Response #' + updated.length + ' imported (' + (data.surveyVersion || 'v1') + ').');
     } catch {
       setError('Invalid code. Please check and try again.');
     }
@@ -69,18 +81,19 @@ export default function AdminImport() {
   }, [responses]);
 
   const exportCSV = useCallback(() => {
-    const header = ['Response#', 'Timestamp', ...PATTERNS.flatMap(p =>
-      RATING_FACTORS.map(f => p.label + ' - ' + f.label)
-    ), ...PATTERNS.map((_, i) => 'Rank#' + (i + 1)), 'Comment'];
-    const rows = responses.map((r, i) => {
-      const ratingCells = PATTERNS.flatMap(p =>
-        RATING_FACTORS.map(f => (r.ratings[p.id] && r.ratings[p.id][f.key]) || '')
-      );
-      const rankCells = r.ranking.map(id => {
-        const p = PATTERNS.find(x => x.id === id);
-        return p ? p.label : id;
+    const v2Responses = responses.filter(isV2);
+    if (!v2Responses.length) return;
+    const header = ['Response#', 'Version', 'Timestamp', 'VariantId', 'PatternId', 'StartDay', 'Overall', 'Accept', 'Comment', 'InTop3'];
+    const rows = [];
+    v2Responses.forEach((r, ri) => {
+      r.ratings.forEach(rating => {
+        rows.push([
+          ri + 1, r.surveyVersion, r.timestamp,
+          rating.variantId, rating.patternId, rating.startDay,
+          rating.overall, rating.accept, rating.comment || '',
+          r.top3.includes(rating.variantId) ? 'Yes' : 'No',
+        ]);
       });
-      return [i + 1, r.ts, ...ratingCells, ...rankCells, r.comment || ''];
     });
     const csv = [header, ...rows].map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -90,81 +103,105 @@ export default function AdminImport() {
     URL.revokeObjectURL(url);
   }, [responses]);
 
-  // ─── Aggregations ───
+  // ─── Aggregations (v2.x only) ───
   const agg = useMemo(() => {
-    if (!responses.length) return null;
-    const n = responses.length;
+    const v2Responses = responses.filter(isV2);
+    if (!v2Responses.length) return null;
+    const n = v2Responses.length;
 
-    // Rank distribution
-    const rankDist = {};
+    // Per-pattern aggregation
+    const patternStats = {};
     PATTERNS.forEach(p => {
-      rankDist[p.id] = { first: 0, second: 0, third: 0, fourth: 0, fifth: 0, total: 0 };
+      patternStats[p.id] = { ratings: [], accepts: 0, rejects: 0, top3Count: 0, totalRatings: 0 };
     });
-    responses.forEach(r => {
-      r.ranking.forEach((id, idx) => {
-        const slots = ['first', 'second', 'third', 'fourth', 'fifth'];
-        if (rankDist[id]) {
-          rankDist[id][slots[idx]]++;
-          rankDist[id].total += (idx + 1);
+
+    // Per-variant aggregation
+    const variantStats = {};
+
+    v2Responses.forEach(r => {
+      r.ratings.forEach(rating => {
+        const pid = rating.patternId;
+        if (patternStats[pid]) {
+          patternStats[pid].ratings.push(rating.overall);
+          patternStats[pid].totalRatings++;
+          if (rating.accept) patternStats[pid].accepts++;
+          else patternStats[pid].rejects++;
+        }
+
+        const vid = rating.variantId;
+        if (!variantStats[vid]) {
+          variantStats[vid] = { ratings: [], accepts: 0, rejects: 0, top3Count: 0, patternId: pid, startDay: rating.startDay };
+        }
+        variantStats[vid].ratings.push(rating.overall);
+        if (rating.accept) variantStats[vid].accepts++;
+        else variantStats[vid].rejects++;
+      });
+
+      r.top3.forEach(vid => {
+        if (variantStats[vid]) variantStats[vid].top3Count++;
+        // Also count pattern-level top3
+        const rating = r.ratings.find(rt => rt.variantId === vid);
+        if (rating && patternStats[rating.patternId]) {
+          patternStats[rating.patternId].top3Count++;
         }
       });
     });
 
-    // Average rank
-    const avgRank = {};
-    PATTERNS.forEach(p => { avgRank[p.id] = rankDist[p.id].total / n; });
-
-    // Factor averages
-    const factorAvg = {};
-    PATTERNS.forEach(p => {
-      factorAvg[p.id] = {};
-      RATING_FACTORS.forEach(f => {
-        const vals = responses.map(r => r.ratings[p.id] && r.ratings[p.id][f.key]).filter(Boolean);
-        factorAvg[p.id][f.key] = vals.length ? (vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
-      });
+    // Pattern summary
+    const patternSummary = PATTERNS.map(p => {
+      const ps = patternStats[p.id];
+      const avgRating = ps.ratings.length ? ps.ratings.reduce((a, b) => a + b, 0) / ps.ratings.length : 0;
+      const acceptRate = ps.totalRatings ? ps.accepts / ps.totalRatings : 0;
+      return { ...p, avgRating, acceptRate, top3Count: ps.top3Count, totalRatings: ps.totalRatings };
     });
 
-    // Per-factor winner
-    const factorWinners = {};
-    RATING_FACTORS.forEach(f => {
-      let best = null, bestVal = 0;
-      PATTERNS.forEach(p => {
-        if (factorAvg[p.id][f.key] > bestVal) {
-          bestVal = factorAvg[p.id][f.key];
-          best = p;
-        }
-      });
-      factorWinners[f.key] = { pattern: best, avg: bestVal };
-    });
+    // Top variants by top3 count
+    const topVariants = Object.entries(variantStats)
+      .map(([vid, vs]) => ({ vid, ...vs, avgRating: vs.ratings.reduce((a, b) => a + b, 0) / vs.ratings.length }))
+      .sort((a, b) => b.top3Count - a.top3Count || b.avgRating - a.avgRating)
+      .slice(0, 10);
 
     // Comments
-    const comments = responses.map(r => r.comment).filter(Boolean);
+    const comments = [];
+    v2Responses.forEach(r => {
+      r.ratings.forEach(rating => {
+        if (rating.comment) comments.push({ variant: rating.variantId, comment: rating.comment });
+      });
+    });
 
-    return { n, rankDist, avgRank, factorAvg, factorWinners, comments };
+    // Version breakdown
+    const v20Count = v2Responses.filter(r => r.surveyVersion === '2.0').length;
+    const v21Count = v2Responses.filter(r => r.surveyVersion === '2.1').length;
+
+    return { n, patternSummary, variantStats, topVariants, comments, v20Count, v21Count };
   }, [responses]);
 
   // ─── Chart data ───
-  const firstPlaceData = useMemo(() => {
+  const avgRatingData = useMemo(() => {
     if (!agg) return [];
-    return PATTERNS.map(p => ({
-      name: p.label,
-      votes: agg.rankDist[p.id].first,
-    }));
+    return agg.patternSummary.map(p => ({ name: p.label, avg: Number(p.avgRating.toFixed(2)) }));
   }, [agg]);
 
-  const avgRankData = useMemo(() => {
+  const acceptRateData = useMemo(() => {
     if (!agg) return [];
-    return PATTERNS.map(p => ({
-      name: p.label,
-      avg: Number(agg.avgRank[p.id].toFixed(2)),
-    }));
+    return agg.patternSummary.map(p => ({ name: p.label, rate: Number((p.acceptRate * 100).toFixed(1)) }));
   }, [agg]);
 
-  const factorChartData = useMemo(() => {
+  const top3Data = useMemo(() => {
     if (!agg) return [];
+    return agg.patternSummary.map(p => ({ name: p.label, count: p.top3Count }));
+  }, [agg]);
+
+  // ─── Variant heatmap data (9 patterns × 7 days) ───
+  const heatmapData = useMemo(() => {
+    if (!agg) return null;
     return PATTERNS.map(p => {
-      const row = { name: p.label };
-      RATING_FACTORS.forEach(f => { row[f.label] = Number(agg.factorAvg[p.id][f.key].toFixed(2)); });
+      const row = { pattern: p.label, patternId: p.id };
+      START_DAYS.forEach(day => {
+        const vid = p.id + '__' + day;
+        const vs = agg.variantStats[vid];
+        row[day] = vs ? Number((vs.ratings.reduce((a, b) => a + b, 0) / vs.ratings.length).toFixed(1)) : null;
+      });
       return row;
     });
   }, [agg]);
@@ -178,7 +215,7 @@ export default function AdminImport() {
       fontFamily: "'SF Pro Display', -apple-system, 'Segoe UI', sans-serif",
       padding: '24px 20px',
     },
-    wrap: { maxWidth: 900, margin: '0 auto' },
+    wrap: { maxWidth: 960, margin: '0 auto' },
     card: {
       background: '#14142a', border: '1px solid #2a2a40', borderRadius: 12,
       padding: 20, marginBottom: 20,
@@ -208,6 +245,7 @@ export default function AdminImport() {
       textTransform: 'uppercase', color: '#3ba4e0', marginBottom: 6,
     },
     h2: { fontSize: 14, fontWeight: 700, color: '#8888aa', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 12 },
+    h3: { fontSize: 13, fontWeight: 700, color: '#c0c0d0', marginBottom: 12 },
     th: {
       padding: '10px 12px', textAlign: 'center', color: '#a0b8d8',
       fontWeight: 600, fontSize: 11, textTransform: 'uppercase',
@@ -215,6 +253,8 @@ export default function AdminImport() {
     },
     td: { padding: '10px 12px', textAlign: 'center', fontSize: 13 },
   };
+
+  const dayLabel = d => d.charAt(0).toUpperCase() + d.slice(1, 3);
 
   return (
     <div style={s.page}>
@@ -265,112 +305,100 @@ export default function AdminImport() {
         {/* Dashboard */}
         {agg && (
           <>
-            {/* Overall Ranking */}
-            <div style={s.card}>
-              <h2 style={s.h2}>Overall Ranking</h2>
-
-              {/* #1 Votes bar chart */}
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', marginBottom: 12 }}>
-                First-Place Votes
-              </h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={firstPlaceData}>
-                  <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} />
-                  <YAxis allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#14142a', border: '1px solid #2a2a40', borderRadius: 8 }}
-                    labelStyle={{ color: '#e0e0f0' }}
-                  />
-                  <Bar dataKey="votes" radius={[6, 6, 0, 0]}>
-                    {firstPlaceData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-
-              {/* Average rank */}
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', margin: '20px 0 12px' }}>
-                Average Rank (1 = best)
-              </h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={avgRankData}>
-                  <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 11 }} />
-                  <YAxis domain={[0, 5]} tick={{ fill: '#8888aa', fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#14142a', border: '1px solid #2a2a40', borderRadius: 8 }}
-                    labelStyle={{ color: '#e0e0f0' }}
-                  />
-                  <Bar dataKey="avg" radius={[6, 6, 0, 0]}>
-                    {avgRankData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-
-              {/* Rank distribution table */}
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', margin: '20px 0 12px' }}>
-                Rank Distribution
-              </h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead>
-                    <tr>
-                      {['Pattern', '1st', '2nd', '3rd', '4th', '5th', 'Avg Rank'].map(h => (
-                        <th key={h} style={s.th}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {PATTERNS.map((p, i) => {
-                      const rd = agg.rankDist[p.id];
-                      return (
-                        <tr key={p.id} style={{ background: i % 2 ? '#14142a' : '#16162c' }}>
-                          <td style={{ ...s.td, textAlign: 'left', fontWeight: 600, color: '#e0e8f0' }}>{p.label}</td>
-                          <td style={{ ...s.td, color: rd.first ? '#12b886' : '#444' }}>{rd.first}</td>
-                          <td style={s.td}>{rd.second}</td>
-                          <td style={s.td}>{rd.third}</td>
-                          <td style={s.td}>{rd.fourth}</td>
-                          <td style={{ ...s.td, color: rd.fifth ? '#ef4444' : '#444' }}>{rd.fifth}</td>
-                          <td style={{ ...s.td, fontWeight: 700, color: '#e0e8f0' }}>{agg.avgRank[p.id].toFixed(2)}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            {/* Version info */}
+            {(agg.v20Count > 0 && agg.v21Count > 0) && (
+              <div style={{ ...s.card, padding: '12px 16px', background: '#1a1520', border: '1px solid #3a2a50' }}>
+                <span style={{ fontSize: 12, color: '#a888cc' }}>
+                  Mixed versions: {agg.v21Count} v2.1 + {agg.v20Count} v2.0 responses
+                </span>
               </div>
+            )}
+
+            {/* Average Rating by Pattern */}
+            <div style={s.card}>
+              <h2 style={s.h2}>Pattern Ratings</h2>
+
+              <h3 style={s.h3}>Average Rating (1-5)</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={avgRatingData} layout="vertical">
+                  <XAxis type="number" domain={[0, 5]} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" tick={{ fill: '#8888aa', fontSize: 10 }} width={160} />
+                  <Tooltip
+                    contentStyle={{ background: '#14142a', border: '1px solid #2a2a40', borderRadius: 8 }}
+                    labelStyle={{ color: '#e0e0f0' }}
+                  />
+                  <Bar dataKey="avg" radius={[0, 6, 6, 0]}>
+                    {avgRatingData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Acceptance Rate */}
+              <h3 style={{ ...s.h3, marginTop: 20 }}>Acceptance Rate (%)</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={acceptRateData} layout="vertical">
+                  <XAxis type="number" domain={[0, 100]} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" tick={{ fill: '#8888aa', fontSize: 10 }} width={160} />
+                  <Tooltip
+                    contentStyle={{ background: '#14142a', border: '1px solid #2a2a40', borderRadius: 8 }}
+                    labelStyle={{ color: '#e0e0f0' }}
+                    formatter={v => v + '%'}
+                  />
+                  <Bar dataKey="rate" radius={[0, 6, 6, 0]}>
+                    {acceptRateData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+
+              {/* Top 3 Frequency */}
+              <h3 style={{ ...s.h3, marginTop: 20 }}>Top 3 Picks by Pattern</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={top3Data} layout="vertical">
+                  <XAxis type="number" allowDecimals={false} tick={{ fill: '#8888aa', fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" tick={{ fill: '#8888aa', fontSize: 10 }} width={160} />
+                  <Tooltip
+                    contentStyle={{ background: '#14142a', border: '1px solid #2a2a40', borderRadius: 8 }}
+                    labelStyle={{ color: '#e0e0f0' }}
+                  />
+                  <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                    {top3Data.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
             </div>
 
-            {/* Factor Ratings */}
+            {/* Variant Heatmap */}
             <div style={s.card}>
-              <h2 style={s.h2}>Factor Ratings</h2>
-
-              {/* Heatmap */}
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', marginBottom: 12 }}>
-                Average Score Heatmap
-              </h3>
+              <h2 style={s.h2}>Variant Heatmap</h2>
+              <p style={{ fontSize: 12, color: '#6666aa', marginBottom: 12 }}>
+                Average rating by pattern &times; start day ({PATTERNS.length} &times; 7 = {PATTERNS.length * 7} variants)
+              </p>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
                       <th style={s.th}>Pattern</th>
-                      {RATING_FACTORS.map(f => (
-                        <th key={f.key} style={{ ...s.th, fontSize: 10 }}>{f.label}</th>
-                      ))}
+                      {START_DAYS.map(d => <th key={d} style={{ ...s.th, fontSize: 10 }}>{dayLabel(d)}</th>)}
                     </tr>
                   </thead>
                   <tbody>
-                    {PATTERNS.map((p) => (
-                      <tr key={p.id}>
-                        <td style={{ ...s.td, textAlign: 'left', fontWeight: 600, color: '#e0e8f0' }}>{p.label}</td>
-                        {RATING_FACTORS.map(f => {
-                          const val = agg.factorAvg[p.id][f.key];
+                    {heatmapData && heatmapData.map((row, i) => (
+                      <tr key={row.patternId} style={{ background: i % 2 ? '#14142a' : '#16162c' }}>
+                        <td style={{ ...s.td, textAlign: 'left', fontWeight: 600, color: '#e0e8f0', fontSize: 11 }}>{row.pattern}</td>
+                        {START_DAYS.map(d => {
+                          const val = row[d];
+                          if (val === null) return <td key={d} style={{ ...s.td, color: '#333' }}>—</td>;
                           const intensity = val / 5;
                           const bg = `rgba(59, 164, 224, ${intensity * 0.6})`;
                           return (
-                            <td key={f.key} style={{ ...s.td, background: bg, fontWeight: 700, color: '#f0f4fa' }}>
-                              {val.toFixed(1)}
+                            <td key={d} style={{ ...s.td, background: bg, fontWeight: 700, color: '#f0f4fa' }}>
+                              {val}
                             </td>
                           );
                         })}
@@ -379,74 +407,108 @@ export default function AdminImport() {
                   </tbody>
                 </table>
               </div>
+            </div>
 
-              {/* Grouped bar chart */}
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', margin: '20px 0 12px' }}>
-                Scores by Factor
-              </h3>
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={factorChartData}>
-                  <XAxis dataKey="name" tick={{ fill: '#8888aa', fontSize: 10 }} />
-                  <YAxis domain={[0, 5]} tick={{ fill: '#8888aa', fontSize: 11 }} />
-                  <Tooltip
-                    contentStyle={{ background: '#14142a', border: '1px solid #2a2a40', borderRadius: 8 }}
-                    labelStyle={{ color: '#e0e0f0' }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 11, color: '#8888aa' }} />
-                  {RATING_FACTORS.map((f, i) => (
-                    <Bar key={f.key} dataKey={f.label} fill={FACTOR_COLORS[i]} radius={[4, 4, 0, 0]} />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-
-              {/* Per-factor winners */}
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', margin: '20px 0 12px' }}>
-                Best Pattern per Factor
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                {RATING_FACTORS.map(f => {
-                  const w = agg.factorWinners[f.key];
-                  return (
-                    <div key={f.key} style={{
-                      background: '#0d1b2a', border: '1px solid #1b3a5c', borderRadius: 10,
-                      padding: '10px 14px',
-                    }}>
-                      <div style={{ fontSize: 10, color: '#6666aa', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                        {f.label}
-                      </div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: '#f0f4fa', marginTop: 2 }}>
-                        {w.pattern ? w.pattern.label : '—'}
-                      </div>
-                      <div style={{ fontSize: 12, color: '#3ba4e0' }}>
-                        avg {w.avg.toFixed(1)}
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* Top Variants */}
+            <div style={s.card}>
+              <h2 style={s.h2}>Top Variants (by Top-3 Picks)</h2>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {['#', 'Variant', 'Avg Rating', 'Accept %', 'Top 3 Picks'].map(h => (
+                        <th key={h} style={s.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agg.topVariants.map((v, i) => {
+                      const total = v.accepts + v.rejects;
+                      const acceptPct = total ? ((v.accepts / total) * 100).toFixed(0) : '—';
+                      const p = PATTERNS.find(pp => pp.id === v.patternId);
+                      return (
+                        <tr key={v.vid} style={{ background: i % 2 ? '#14142a' : '#16162c' }}>
+                          <td style={{ ...s.td, fontWeight: 700, color: '#3ba4e0' }}>{i + 1}</td>
+                          <td style={{ ...s.td, textAlign: 'left', fontWeight: 600, color: '#e0e8f0' }}>
+                            {p ? p.label : v.patternId}
+                            <span style={{ color: '#6666aa', fontWeight: 400 }}> — {v.startDay}</span>
+                          </td>
+                          <td style={{ ...s.td, fontWeight: 700, color: '#f0f4fa' }}>{v.avgRating.toFixed(1)}</td>
+                          <td style={{ ...s.td, color: Number(acceptPct) >= 70 ? '#12b886' : Number(acceptPct) >= 40 ? '#fbbf24' : '#ef4444' }}>
+                            {acceptPct}%
+                          </td>
+                          <td style={{ ...s.td, fontWeight: 800, color: '#12b886', fontSize: 16 }}>{v.top3Count}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* Response Summary */}
+            {/* Pattern Summary Table */}
+            <div style={s.card}>
+              <h2 style={s.h2}>Pattern Summary</h2>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      {['Pattern', 'Type', 'Cycle', '~Nights/Yr', 'Avg Rating', 'Accept %', 'Top 3', 'Responses'].map(h => (
+                        <th key={h} style={s.th}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {agg.patternSummary.map((p, i) => (
+                      <tr key={p.id} style={{ background: i % 2 ? '#14142a' : '#16162c' }}>
+                        <td style={{ ...s.td, textAlign: 'left', fontWeight: 600, color: '#e0e8f0' }}>{p.label}</td>
+                        <td style={{ ...s.td, fontSize: 11 }}>
+                          <span style={{
+                            padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 600,
+                            background: p.type === 'split' ? '#3d352020' : '#1b6ca820',
+                            color: p.type === 'split' ? '#b8a040' : '#3ba4e0',
+                            border: p.type === 'split' ? '1px solid #7a6a3040' : '1px solid #3ba4e040',
+                          }}>
+                            {p.type}
+                          </span>
+                        </td>
+                        <td style={s.td}>{p.cycle}d</td>
+                        <td style={s.td}>{p.nightsPerYear}</td>
+                        <td style={{ ...s.td, fontWeight: 700, color: '#f0f4fa' }}>{p.avgRating.toFixed(1)}</td>
+                        <td style={{ ...s.td, color: p.acceptRate >= 0.7 ? '#12b886' : p.acceptRate >= 0.4 ? '#fbbf24' : '#ef4444' }}>
+                          {(p.acceptRate * 100).toFixed(0)}%
+                        </td>
+                        <td style={{ ...s.td, fontWeight: 700, color: '#12b886' }}>{p.top3Count}</td>
+                        <td style={{ ...s.td, color: '#8888aa' }}>{p.totalRatings}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Comments */}
+            {agg.comments.length > 0 && (
+              <div style={s.card}>
+                <h2 style={s.h2}>Comments ({agg.comments.length})</h2>
+                {agg.comments.slice(0, 20).map((c, i) => (
+                  <div key={i} style={{
+                    background: '#0d1b2a', border: '1px solid #1b3a5c', borderRadius: 8,
+                    padding: '10px 14px', marginBottom: 6,
+                  }}>
+                    <div style={{ fontSize: 10, color: '#6666aa', marginBottom: 4 }}>{c.variant}</div>
+                    <div style={{ fontSize: 13, color: '#c0c8e0', fontStyle: 'italic' }}>"{c.comment}"</div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Response Summary + Actions */}
             <div style={s.card}>
               <h2 style={s.h2}>Response Summary</h2>
               <p style={{ fontSize: 15, color: '#e0e8f0', marginBottom: 12 }}>
                 <strong>{agg.n}</strong> of <strong>{TOTAL_MDS}</strong> responses collected
               </p>
-
-              {agg.comments.length > 0 && (
-                <>
-                  <h3 style={{ fontSize: 13, fontWeight: 700, color: '#c0c0d0', marginBottom: 8 }}>Comments</h3>
-                  {agg.comments.map((c, i) => (
-                    <div key={i} style={{
-                      background: '#0d1b2a', border: '1px solid #1b3a5c', borderRadius: 8,
-                      padding: '10px 14px', marginBottom: 6,
-                      fontSize: 13, color: '#c0c8e0', fontStyle: 'italic',
-                    }}>
-                      "{c}"
-                    </div>
-                  ))}
-                </>
-              )}
 
               <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
                 <button style={{ ...s.btn, ...s.btnSecondary }} onClick={exportCSV}>
@@ -464,7 +526,7 @@ export default function AdminImport() {
         )}
 
         <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: '#444466' }}>
-          Nocturnist Schedule Analysis &middot; v1.0 &middot; Admin Import Tool
+          Nocturnist Schedule Analysis &middot; v2.1 &middot; Admin Import Tool
         </div>
       </div>
     </div>

@@ -79,15 +79,26 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 
 ---
 
-## Schedule Patterns Under Evaluation
+## Schedule Patterns Under Evaluation (9 patterns)
 
-| ID | Label | On | Off | Cycle | ~Nights/Yr | Delta from 156 |
-|----|-------|-----|------|-------|-------------|-----------------|
-| 6on8off | 6 on / 8 off | 6 | 8 | 14 | 156 | 0 |
-| 7on9off | 7 on / 9 off | 7 | 9 | 16 | 160 | +4 |
-| 5on7off | 5 on / 7 off | 5 | 7 | 12 | 152 | -4 |
-| 7on10off | 7 on / 10 off | 7 | 10 | 17 | 150 | -6 |
-| 8on11off | 8 on / 11 off | 8 | 11 | 19 | 154 | -2 |
+### Simple Patterns (4)
+
+| ID | Label | Cycle | ~Nights/Yr | Delta from 156 | Max Consecutive |
+|----|-------|-------|-------------|-----------------|-----------------|
+| 6on8off | 6 on / 8 off | 14 | 156 | 0 | 6 |
+| 7on9off | 7 on / 9 off | 16 | 160 | +4 | 7 |
+| 5on7off | 5 on / 7 off | 12 | 152 | -4 | 5 |
+| 7on10off | 7 on / 10 off | 17 | 150 | -6 | 7 |
+
+### Split-Block Patterns (5)
+
+| ID | Label | Cycle | ~Nights/Yr | Delta from 156 | Max Consecutive |
+|----|-------|-------|-------------|-----------------|-----------------|
+| 4on1off3on8off | 4 on / 1 off / 3 on / 8 off | 16 | 160 | +4 | 4 |
+| 3on1off3on7off | 3 on / 1 off / 3 on / 7 off | 14 | 156 | 0 | 3 |
+| 3on1off3on8off | 3 on / 1 off / 3 on / 8 off | 15 | 146 | -10 | 3 |
+| 4on1off2on7off | 4 on / 1 off / 2 on / 7 off | 14 | 156 | 0 | 4 |
+| 3on2off3on6off | 3 on / 2 off / 3 on / 6 off | 14 | 156 | 0 | 3 |
 
 ---
 
@@ -105,9 +116,11 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 8. **Preference survey return method:** mailto: link opens pre-filled email with code in body, copy-paste as fallback
 9. **Admin import tools** — separate routes in React app for each survey type
 10. **Both mobile and desktop equally important** — responsive design required
-11. **Survey v2.0 rating per schedule variant:** overall 1-5 stars + accept yes/no + optional comment (replaced 5-factor rating system)
-    - 35 variants (5 patterns × 7 start days) with real Apr–Jun 2026 calendar dates
-    - Stratified sampling: 10 per respondent, at least 1 per pattern, max 3 per pattern
+11. **Survey v2.1 rating per schedule variant:** overall 1-5 stars + accept yes/no + optional comment (replaced 5-factor rating system)
+    - 63 variants (9 patterns × 7 start days) with real Apr–Jun 2026 calendar dates
+    - 4 simple patterns + 5 split-block patterns (removed 8on11off, added split-blocks)
+    - Split-block calendar rendering with mini-break visual distinction (gold dashed) vs recovery days off
+    - Stratified sampling: 14 per respondent, at least 1 per pattern, max 3 per pattern
     - Top 3 selection replaces drag-to-rank
 12. **Preference survey data points:**
     - Physician name (dropdown)
@@ -147,15 +160,18 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 - GitHub repo: `nocturnist-scheduler` (private)
 - Spreadsheet version also delivered (`nocturnist_schedule_analysis.xlsx`)
 
-### Phase 2A: Schedule Rating Survey v2.0 ✅ REBUILT
+### Phase 2A: Schedule Rating Survey v2.1 ✅ REBUILT
 **Spec file:** `PHASE2_SPEC_v2.md`
 - `survey.html` — standalone offline file, dark theme, mobile responsive
-- **v2.0 rebuild**: Real calendar dates (Apr–Jun 2026), randomized variant system
-- 35 pre-generated variants (5 patterns × 7 start days), stratified random sampling selects 10 per respondent
-- Sampling: at least 1 from each pattern, no more than 3 from any single pattern
-- Welcome → 10 schedule reviews (3-month calendar, overall 1-5 rating, accept yes/no, optional comment) → Pick top 3 → Copy-paste Base64 code
-- Output format: `surveyVersion: "2.0"`, `variantsPresented` (10 variant IDs), `ratings` (10 objects with variantId/patternId/startDay/overall/accept/comment), `top3` (3 variant IDs)
-- Admin import at `/admin/import` — needs update to support v2.0 data format (variant heatmap, acceptance rates, pattern/start-day aggregates, top 3 frequency)
+- **v2.1 update**: 9 patterns (4 simple + 5 split-block), 63 variants, 14 per respondent
+- Split-block patterns render with mini-break visual distinction (gold dashed cells) and descriptive text
+- Calendar legend adapts: shows mini-break swatch only for split-block patterns
+- 63 pre-generated variants (9 patterns × 7 start days), stratified random sampling selects 14 per respondent
+- Sampling: at least 1 from each of 9 patterns, no more than 3 from any single pattern
+- Welcome → 14 schedule reviews (3-month calendar, overall 1-5 rating, accept yes/no, optional comment) → Pick top 3 → Copy-paste Base64 code
+- Output format: `surveyVersion: "2.1"`, `variantsPresented` (14 variant IDs), `ratings` (14 objects with variantId/patternId/startDay/overall/accept/comment), `top3` (3 variant IDs)
+- Variant ID format: `{patternId}__{startDay}` (double underscore)
+- Admin import at `/admin/import` — needs update to support v2.1 data format (9×7 variant heatmap, acceptance rates, pattern/start-day aggregates, top 3 frequency) + backward compat with v2.0
 - localStorage key: `nocturnist_survey_responses`
 
 ### Phase 2B: Named Preference Survey ✅ COMPLETE

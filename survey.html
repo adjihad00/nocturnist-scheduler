@@ -23,6 +23,8 @@
   --on-border: #3ba4e0;
   --off: #1a1a2e;
   --off-border: #333350;
+  --mini-break: #3d3520;
+  --mini-break-border: #7a6a30;
 }
 
 html { font-size: 16px; }
@@ -103,6 +105,31 @@ h1 {
 .sched-num { font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
 .sched-badge { font-size: 20px; font-weight: 800; color: #f0f4fa; margin-bottom: 4px; }
 .sched-stats { font-size: 13px; color: var(--text2); }
+.sched-desc { font-size: 12px; color: var(--yellow); margin-top: 6px; font-style: italic; }
+
+/* Calendar Legend */
+.cal-legend {
+  display: flex; gap: 14px; flex-wrap: wrap;
+  margin-bottom: 14px; padding: 10px 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; font-size: 12px; color: var(--text2);
+}
+.cal-legend-item {
+  display: flex; align-items: center; gap: 5px;
+}
+.cal-legend-swatch {
+  width: 14px; height: 14px; border-radius: 4px;
+}
+.cal-legend-swatch.on {
+  background: linear-gradient(135deg, var(--on), var(--accent-dim));
+}
+.cal-legend-swatch.mini {
+  background: var(--mini-break);
+  border: 1px dashed var(--mini-break-border);
+}
+.cal-legend-swatch.off {
+  background: var(--off);
+}
 
 /* Calendar */
 .cal-month { margin-bottom: 16px; }
@@ -130,6 +157,11 @@ h1 {
 }
 .cal-cell.off {
   background: var(--off); color: #555570;
+}
+.cal-cell.mini-break {
+  background: var(--mini-break);
+  border: 1px dashed var(--mini-break-border);
+  color: #b8a040;
 }
 .cal-cell.pre {
   background: #111119; color: #2a2a38;
@@ -270,13 +302,13 @@ h1 {
     <div class="header-tag">NOCTURNIST SCHEDULING</div>
     <h1>Nocturnist Schedule Survey</h1>
     <p class="subtitle">
-      You'll review 10 possible schedule patterns shown on a real April&ndash;June 2026 calendar.
+      You'll review 14 possible schedule patterns shown on a real April&ndash;June 2026 calendar.
       Each schedule has a different work pattern and start day. Rate each one, then pick your top 3.
     </p>
     <button class="btn btn-primary" onclick="S.start()">Start</button>
   </div>
 
-  <!-- Screens 2-11: Schedule Review -->
+  <!-- Screens 2-15: Schedule Review -->
   <div class="screen" id="screen-review">
     <div class="progress-wrap">
       <div class="progress-label" id="prog-label"></div>
@@ -289,11 +321,11 @@ h1 {
     </div>
   </div>
 
-  <!-- Screen 12: Pick Top 3 -->
+  <!-- Screen 16: Pick Top 3 -->
   <div class="screen" id="screen-top3">
     <div class="progress-wrap">
-      <div class="progress-label">Step 12 of 13</div>
-      <div class="progress-bar"><div class="progress-fill" style="width:92.3%"></div></div>
+      <div class="progress-label">Step 16 of 17</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:94.1%"></div></div>
     </div>
     <h1>Pick Your Top 3 Schedules</h1>
     <p class="subtitle">Select the 3 schedules you'd most want as your actual schedule.</p>
@@ -305,7 +337,7 @@ h1 {
     </div>
   </div>
 
-  <!-- Screen 13: Result Code -->
+  <!-- Screen 17: Result Code -->
   <div class="screen" id="screen-result">
     <div class="check-circle">&#10003;</div>
     <h1 style="text-align:center;">Thank You!</h1>
@@ -313,8 +345,11 @@ h1 {
     <div class="code-box" id="result-code"></div>
     <button class="btn btn-primary" onclick="S.copy()">Copy Code</button>
     <div class="copy-feedback" id="copy-feedback"></div>
+    <div style="margin-top:16px">
+      <a id="mailto-link" class="btn btn-primary" style="text-decoration:none;background:linear-gradient(135deg,#0f7b5f,var(--green));width:100%">Email to Admin</a>
+    </div>
     <div class="instructions">
-      <strong>Instructions:</strong> Copy the code above and send it to your schedule coordinator via text or email with the subject line: <em>Schedule Survey</em>
+      <strong>Instructions:</strong> Tap "Email to Admin" to send your response. If your email app doesn't open, copy the code above and text/email it to your schedule coordinator with the subject line: <em>Schedule Survey</em>
     </div>
   </div>
 
@@ -324,20 +359,110 @@ h1 {
 (function() {
   'use strict';
 
-  // ─── Pattern Definitions ───
+  var TOTAL_VARIANTS_PER_RESPONDENT = 14;
+  var TOTAL_STEPS = 17; // welcome(1) + 14 reviews(2-15) + top3(16) + result(17)
+  var ADMIN_EMAIL = 'kydiazdo@gmail.com';
+
+  // ─── Pattern Definitions (9 patterns) ───
   var PATTERNS = [
-    { id: '6on8off',  on: 6,  off: 8,  cycle: 14 },
-    { id: '7on9off',  on: 7,  off: 9,  cycle: 16 },
-    { id: '5on7off',  on: 5,  off: 7,  cycle: 12 },
-    { id: '7on10off', on: 7,  off: 10, cycle: 17 },
-    { id: '8on11off', on: 8,  off: 11, cycle: 19 }
+    {
+      id: '6on8off', label: '6 on / 8 off', type: 'simple',
+      segments: [{ type: 'on', nights: 6 }, { type: 'off', nights: 8 }],
+      cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 6
+    },
+    {
+      id: '7on9off', label: '7 on / 9 off', type: 'simple',
+      segments: [{ type: 'on', nights: 7 }, { type: 'off', nights: 9 }],
+      cycle: 16, nightsPerYear: 160, deltaFrom156: 4, maxConsecutive: 7
+    },
+    {
+      id: '5on7off', label: '5 on / 7 off', type: 'simple',
+      segments: [{ type: 'on', nights: 5 }, { type: 'off', nights: 7 }],
+      cycle: 12, nightsPerYear: 152, deltaFrom156: -4, maxConsecutive: 5
+    },
+    {
+      id: '7on10off', label: '7 on / 10 off', type: 'simple',
+      segments: [{ type: 'on', nights: 7 }, { type: 'off', nights: 10 }],
+      cycle: 17, nightsPerYear: 150, deltaFrom156: -6, maxConsecutive: 7
+    },
+    {
+      id: '4on1off3on8off', label: '4 on / 1 off / 3 on / 8 off', type: 'split',
+      segments: [
+        { type: 'on', nights: 4 }, { type: 'off', nights: 1 },
+        { type: 'on', nights: 3 }, { type: 'off', nights: 8 }
+      ],
+      cycle: 16, nightsPerYear: 160, deltaFrom156: 4, maxConsecutive: 4
+    },
+    {
+      id: '3on1off3on7off', label: '3 on / 1 off / 3 on / 7 off', type: 'split',
+      segments: [
+        { type: 'on', nights: 3 }, { type: 'off', nights: 1 },
+        { type: 'on', nights: 3 }, { type: 'off', nights: 7 }
+      ],
+      cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 3
+    },
+    {
+      id: '3on1off3on8off', label: '3 on / 1 off / 3 on / 8 off', type: 'split',
+      segments: [
+        { type: 'on', nights: 3 }, { type: 'off', nights: 1 },
+        { type: 'on', nights: 3 }, { type: 'off', nights: 8 }
+      ],
+      cycle: 15, nightsPerYear: 146, deltaFrom156: -10, maxConsecutive: 3
+    },
+    {
+      id: '4on1off2on7off', label: '4 on / 1 off / 2 on / 7 off', type: 'split',
+      segments: [
+        { type: 'on', nights: 4 }, { type: 'off', nights: 1 },
+        { type: 'on', nights: 2 }, { type: 'off', nights: 7 }
+      ],
+      cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 4
+    },
+    {
+      id: '3on2off3on6off', label: '3 on / 2 off / 3 on / 6 off', type: 'split',
+      segments: [
+        { type: 'on', nights: 3 }, { type: 'off', nights: 2 },
+        { type: 'on', nights: 3 }, { type: 'off', nights: 6 }
+      ],
+      cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 3
+    }
   ];
 
   var START_DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  // JS getDay(): 0=Sun, 1=Mon, ..., 6=Sat
   var DAY_INDEX = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
 
-  // ─── Generate All 35 Variants ───
+  // ─── Split-block description generator ───
+  function splitDescription(p) {
+    if (p.type !== 'split') return '';
+    var parts = [];
+    for (var i = 0; i < p.segments.length; i++) {
+      var seg = p.segments[i];
+      if (seg.type === 'on') {
+        parts.push(seg.nights + ' work night' + (seg.nights > 1 ? 's' : ''));
+      } else {
+        if (i < p.segments.length - 1) {
+          parts.push(seg.nights + '-night breather');
+        } else {
+          parts.push(seg.nights + ' days recovery');
+        }
+      }
+    }
+    return 'Split block: ' + parts.join(', ');
+  }
+
+  // ─── Determine if an off-segment is a mini-break (not the last off-segment) ───
+  function isMiniBreak(pattern, segIndex) {
+    // A mini-break is any off segment that is NOT the last off segment
+    // (i.e., it's a short break between on-blocks)
+    if (pattern.segments[segIndex].type !== 'off') return false;
+    // Find the last off segment index
+    var lastOffIdx = -1;
+    for (var i = pattern.segments.length - 1; i >= 0; i--) {
+      if (pattern.segments[i].type === 'off') { lastOffIdx = i; break; }
+    }
+    return segIndex !== lastOffIdx;
+  }
+
+  // ─── Generate All 63 Variants ───
   var ALL_VARIANTS = {};
   (function buildVariants() {
     var apr1Day = 3; // April 1, 2026 = Wednesday, getDay()=3
@@ -350,6 +475,22 @@ h1 {
         var nightsWorked = 0;
         var blocksWorked = 0;
 
+        // Build segment lookup: for each position in cycle, what's the status?
+        var cycleMap = []; // array of { status: 'on'|'off'|'mini-break' }
+        var segPos = 0;
+        for (var si = 0; si < p.segments.length; si++) {
+          var seg = p.segments[si];
+          var mini = isMiniBreak(p, si);
+          for (var sn = 0; sn < seg.nights; sn++) {
+            if (seg.type === 'on') {
+              cycleMap.push({ status: 'on', segIndex: si, posInSeg: sn });
+            } else {
+              cycleMap.push({ status: mini ? 'mini-break' : 'off', segIndex: si, posInSeg: sn });
+            }
+            segPos++;
+          }
+        }
+
         for (var i = 0; i < 91; i++) {
           var d = new Date(2026, 3, 1 + i);
           var ds = fmtDate(d);
@@ -359,28 +500,32 @@ h1 {
             status = 'pre';
           } else {
             var pos = (i - offset) % p.cycle;
-            if (pos < p.on) {
-              status = 'on';
+            var cm = cycleMap[pos];
+            status = cm.status;
+            if (status === 'on') {
               nightsWorked++;
-              if (pos === 0) blocksWorked++;
-            } else {
-              status = 'off';
+              // Count blocks: first on-segment starting
+              if (cm.segIndex === 0 && cm.posInSeg === 0) blocksWorked++;
             }
           }
           dates.push({ date: ds, status: status });
         }
 
-        var vid = p.id + '_' + sd;
+        var vid = p.id + '__' + sd;
         ALL_VARIANTS[vid] = {
           variantId: vid,
           patternId: p.id,
           startDay: sd.charAt(0).toUpperCase() + sd.slice(1),
-          onDays: p.on,
-          offDays: p.off,
+          label: p.label,
+          type: p.type,
           cycleLength: p.cycle,
+          nightsPerYear: p.nightsPerYear,
+          deltaFrom156: p.deltaFrom156,
+          maxConsecutive: p.maxConsecutive,
           dates: dates,
           nightsWorked: nightsWorked,
-          blocksWorked: blocksWorked
+          blocksWorked: blocksWorked,
+          description: splitDescription(p)
         };
       });
     });
@@ -392,7 +537,7 @@ h1 {
       String(d.getDate()).padStart(2, '0');
   }
 
-  // ─── Stratified Random Sampling ───
+  // ─── Stratified Random Sampling (14 per respondent) ───
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
@@ -401,14 +546,14 @@ h1 {
     return arr;
   }
 
-  function selectTen() {
+  function selectVariants() {
     var byPat = {};
     PATTERNS.forEach(function(p) { byPat[p.id] = []; });
     var keys = Object.keys(ALL_VARIANTS);
     keys.forEach(function(k) { byPat[ALL_VARIANTS[k].patternId].push(ALL_VARIANTS[k]); });
     Object.keys(byPat).forEach(function(k) { shuffle(byPat[k]); });
 
-    // 1 guaranteed from each pattern
+    // 1 guaranteed from each of 9 patterns
     var selected = [];
     var cnt = {};
     PATTERNS.forEach(function(p) {
@@ -425,7 +570,7 @@ h1 {
     });
     shuffle(remaining);
 
-    // pick 5 more, max 3 total per pattern
+    // pick 5 more (14 - 9 = 5), max 3 total per pattern
     var picked = 0;
     for (var i = 0; i < remaining.length && picked < 5; i++) {
       var pid = remaining[i].patternId;
@@ -441,10 +586,10 @@ h1 {
   }
 
   // ─── State ───
-  var selected = selectTen();
+  var selected = selectVariants();
   var cur = 0;
   var responses = [];
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < TOTAL_VARIANTS_PER_RESPONDENT; i++) {
     responses.push({ overall: 0, accept: null, comment: '' });
   }
   var top3 = [];
@@ -465,11 +610,21 @@ h1 {
       { name: 'June 2026',   year: 2026, month: 5, days: 30, dateOffset: 61 }
     ];
     var hdrs = ['M','T','W','T','F','S','S'];
+    var hasMiniBreak = variant.type === 'split';
     var html = '';
 
+    // Legend
+    html += '<div class="cal-legend">';
+    html += '<div class="cal-legend-item"><div class="cal-legend-swatch on"></div> Work night</div>';
+    if (hasMiniBreak) {
+      html += '<div class="cal-legend-item"><div class="cal-legend-swatch mini"></div> Mini-break</div>';
+    }
+    html += '<div class="cal-legend-item"><div class="cal-legend-swatch off"></div> Days off</div>';
+    html += '</div>';
+
     months.forEach(function(m) {
-      var firstDay = new Date(m.year, m.month, 1).getDay(); // 0=Sun
-      var startCol = (firstDay + 6) % 7; // Mon=0..Sun=6
+      var firstDay = new Date(m.year, m.month, 1).getDay();
+      var startCol = (firstDay + 6) % 7;
 
       html += '<div class="cal-month">';
       html += '<div class="cal-month-label">' + m.name + '</div>';
@@ -500,12 +655,12 @@ h1 {
     window.scrollTo(0, 0);
     var v = selected[cur];
     var r = responses[cur];
-    var step = cur + 2; // welcome=1, schedules=2-11, top3=12, result=13
+    var step = cur + 2; // welcome=1, schedules=2-15
 
     // Progress
     document.getElementById('prog-label').textContent =
-      'Schedule ' + (cur + 1) + ' of 10  \u00b7  Step ' + step + ' of 13';
-    document.getElementById('prog-fill').style.width = (step / 13 * 100).toFixed(1) + '%';
+      'Schedule ' + (cur + 1) + ' of ' + TOTAL_VARIANTS_PER_RESPONDENT + '  \u00b7  Step ' + step + ' of ' + TOTAL_STEPS;
+    document.getElementById('prog-fill').style.width = (step / TOTAL_STEPS * 100).toFixed(1) + '%';
 
     // Back button
     document.getElementById('btn-back').style.display = cur === 0 ? 'none' : '';
@@ -514,9 +669,12 @@ h1 {
 
     // Header
     html += '<div class="sched-header">';
-    html += '<div class="sched-num">Schedule ' + (cur + 1) + ' of 10</div>';
-    html += '<div class="sched-badge">' + v.onDays + ' on / ' + v.offDays + ' off &mdash; starts ' + v.startDay + '</div>';
-    html += '<div class="sched-stats">' + v.nightsWorked + ' nights worked &middot; ' + v.blocksWorked + ' blocks &middot; ' + v.cycleLength + '-day cycle</div>';
+    html += '<div class="sched-num">Schedule ' + (cur + 1) + ' of ' + TOTAL_VARIANTS_PER_RESPONDENT + '</div>';
+    html += '<div class="sched-badge">' + v.label + ' &mdash; starts ' + v.startDay + '</div>';
+    html += '<div class="sched-stats">' + v.cycleLength + '-day cycle &middot; ~' + v.nightsPerYear + ' nights/yr &middot; Max ' + v.maxConsecutive + ' consecutive</div>';
+    if (v.description) {
+      html += '<div class="sched-desc">' + v.description + '</div>';
+    }
     html += '</div>';
 
     // Calendar
@@ -560,7 +718,7 @@ h1 {
     var valid = r.overall > 0 && r.accept !== null;
     var btn = document.getElementById('btn-next');
     btn.disabled = !valid;
-    btn.textContent = cur === 9 ? 'Continue' : 'Next';
+    btn.textContent = cur === TOTAL_VARIANTS_PER_RESPONDENT - 1 ? 'Continue' : 'Next';
   }
 
   // ─── Top 3 Screen ───
@@ -572,7 +730,7 @@ h1 {
       html += '<div class="top3-card' + (isSel ? ' selected' : '') + '" onclick="S.toggleTop3(\'' + v.variantId + '\')">';
       html += '<div class="top3-num">' + (i + 1) + '</div>';
       html += '<div class="top3-info">';
-      html += '<div class="top3-label">' + v.onDays + ' on / ' + v.offDays + ' off</div>';
+      html += '<div class="top3-label">' + v.label + '</div>';
       html += '<div class="top3-detail">Starts ' + v.startDay + ' \u00b7 ' + starsStr(r.overall) + ' \u00b7 ' + (r.accept ? 'Yes' : 'No') + '</div>';
       html += '</div>';
       html += '<div class="top3-check">&#10003;</div>';
@@ -621,7 +779,7 @@ h1 {
     },
 
     next: function() {
-      if (cur < 9) {
+      if (cur < TOTAL_VARIANTS_PER_RESPONDENT - 1) {
         cur++;
         renderReview();
       } else {
@@ -639,7 +797,7 @@ h1 {
     },
 
     backFromTop3: function() {
-      cur = 9;
+      cur = TOTAL_VARIANTS_PER_RESPONDENT - 1;
       showScreen('review');
       renderReview();
     },
@@ -656,7 +814,7 @@ h1 {
 
     submit: function() {
       var data = {
-        surveyVersion: '2.0',
+        surveyVersion: '2.1',
         timestamp: new Date().toISOString(),
         variantsPresented: selected.map(function(v) { return v.variantId; }),
         ratings: selected.map(function(v, i) {
@@ -682,6 +840,12 @@ h1 {
 
       document.getElementById('result-code').textContent = encoded;
       document.getElementById('copy-feedback').textContent = '';
+
+      // mailto link
+      var subject = encodeURIComponent('Schedule Survey');
+      var body = encodeURIComponent(encoded);
+      document.getElementById('mailto-link').href = 'mailto:' + ADMIN_EMAIL + '?subject=' + subject + '&body=' + body;
+
       showScreen('result');
     },
 

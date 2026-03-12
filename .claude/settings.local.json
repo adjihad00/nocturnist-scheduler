@@ -43,7 +43,11 @@
       "Bash(npm run build)",
       "Bash(\"/mnt/c/Program Files/nodejs/node.exe\" --version)",
       "Bash(\"/c/Program Files/nodejs/node.exe\" --version)",
-      "Bash(powershell.exe -Command \"Get-Command node -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")"
+      "Bash(powershell.exe -Command \"Get-Command node -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source\")",
+      "Bash(/dev/null --prefix \"C:/Users/Kyle Diaz/nocturnist-scheduler\")",
+      "Bash(\"C:/Users/Kyle Diaz/.nodejs/node-v22.16.0-win-x64/npm.cmd\" install serve --save-dev)",
+      "Bash(\"C:/Users/Kyle Diaz/.nodejs/node-v22.16.0-win-x64/npm.cmd\" uninstall serve)",
+      "Bash(npx kill-port:*)"
     ]
   }
 }

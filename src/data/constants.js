@@ -14,11 +14,66 @@ export const TARGET_NIGHTS = 156;
 export const DAYS_YEAR = 365;
 
 export const PATTERNS = [
-  { id: '6on8off', label: '6 on / 8 off', on: 6, off: 8 },
-  { id: '7on9off', label: '7 on / 9 off', on: 7, off: 9 },
-  { id: '5on7off', label: '5 on / 7 off', on: 5, off: 7 },
-  { id: '7on10off', label: '7 on / 10 off', on: 7, off: 10 },
-  { id: '8on11off', label: '8 on / 11 off', on: 8, off: 11 },
+  {
+    id: '6on8off', label: '6 on / 8 off', type: 'simple',
+    segments: [{ type: 'on', nights: 6 }, { type: 'off', nights: 8 }],
+    cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 6
+  },
+  {
+    id: '7on9off', label: '7 on / 9 off', type: 'simple',
+    segments: [{ type: 'on', nights: 7 }, { type: 'off', nights: 9 }],
+    cycle: 16, nightsPerYear: 160, deltaFrom156: 4, maxConsecutive: 7
+  },
+  {
+    id: '5on7off', label: '5 on / 7 off', type: 'simple',
+    segments: [{ type: 'on', nights: 5 }, { type: 'off', nights: 7 }],
+    cycle: 12, nightsPerYear: 152, deltaFrom156: -4, maxConsecutive: 5
+  },
+  {
+    id: '7on10off', label: '7 on / 10 off', type: 'simple',
+    segments: [{ type: 'on', nights: 7 }, { type: 'off', nights: 10 }],
+    cycle: 17, nightsPerYear: 150, deltaFrom156: -6, maxConsecutive: 7
+  },
+  {
+    id: '4on1off3on8off', label: '4 on / 1 off / 3 on / 8 off', type: 'split',
+    segments: [
+      { type: 'on', nights: 4 }, { type: 'off', nights: 1 },
+      { type: 'on', nights: 3 }, { type: 'off', nights: 8 }
+    ],
+    cycle: 16, nightsPerYear: 160, deltaFrom156: 4, maxConsecutive: 4
+  },
+  {
+    id: '3on1off3on7off', label: '3 on / 1 off / 3 on / 7 off', type: 'split',
+    segments: [
+      { type: 'on', nights: 3 }, { type: 'off', nights: 1 },
+      { type: 'on', nights: 3 }, { type: 'off', nights: 7 }
+    ],
+    cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 3
+  },
+  {
+    id: '3on1off3on8off', label: '3 on / 1 off / 3 on / 8 off', type: 'split',
+    segments: [
+      { type: 'on', nights: 3 }, { type: 'off', nights: 1 },
+      { type: 'on', nights: 3 }, { type: 'off', nights: 8 }
+    ],
+    cycle: 15, nightsPerYear: 146, deltaFrom156: -10, maxConsecutive: 3
+  },
+  {
+    id: '4on1off2on7off', label: '4 on / 1 off / 2 on / 7 off', type: 'split',
+    segments: [
+      { type: 'on', nights: 4 }, { type: 'off', nights: 1 },
+      { type: 'on', nights: 2 }, { type: 'off', nights: 7 }
+    ],
+    cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 4
+  },
+  {
+    id: '3on2off3on6off', label: '3 on / 2 off / 3 on / 6 off', type: 'split',
+    segments: [
+      { type: 'on', nights: 3 }, { type: 'off', nights: 2 },
+      { type: 'on', nights: 3 }, { type: 'off', nights: 6 }
+    ],
+    cycle: 14, nightsPerYear: 156, deltaFrom156: 0, maxConsecutive: 3
+  }
 ];
 
 export const PHYSICIANS = [
@@ -43,10 +98,4 @@ export const PHYSICIANS = [
   { name: 'Pitts',    sites: { GMH: 40, OMH: 30, LCH: 30 } },
 ];
 
-export const RATING_FACTORS = [
-  { key: 'wlb',     label: 'Work-life balance',        desc: 'How well does this pattern support your personal life?' },
-  { key: 'sleep',   label: 'Sleep/circadian rhythm',    desc: 'How manageable is the sleep transition on this pattern?' },
-  { key: 'wknd',    label: 'Weekend/holiday fairness',  desc: 'How fair is the weekend/holiday distribution?' },
-  { key: 'consec',  label: 'Consecutive nights',        desc: 'How tolerable is the consecutive night stretch?' },
-  { key: 'predict', label: 'Schedule predictability',   desc: 'How easy is it to plan your life around this pattern?' },
-];
+export const START_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
