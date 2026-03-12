@@ -315,13 +315,13 @@ h1 {
     <div class="header-tag">NOCTURNIST SCHEDULING</div>
     <h1>Nocturnist Schedule Survey</h1>
     <p class="subtitle">
-      You'll review 14 possible schedule patterns shown on a real April&ndash;June 2026 calendar.
+      You'll review 12 possible schedule patterns shown on a real April&ndash;June 2026 calendar.
       Each schedule has a different work pattern and start day. Rate each one, then pick your top 3.
     </p>
     <button class="btn btn-primary" onclick="S.start()">Start</button>
   </div>
 
-  <!-- Screens 2-15: Schedule Review -->
+  <!-- Screens 2-13: Schedule Review -->
   <div class="screen" id="screen-review">
     <div class="progress-wrap">
       <div class="progress-label" id="prog-label"></div>
@@ -372,8 +372,8 @@ h1 {
 (function() {
   'use strict';
 
-  var TOTAL_VARIANTS_PER_RESPONDENT = 14;
-  var TOTAL_STEPS = 17; // welcome(1) + 14 reviews(2-15) + top3(16) + result(17)
+  var TOTAL_VARIANTS_PER_RESPONDENT = 12;
+  var TOTAL_STEPS = 15; // welcome(1) + 12 reviews(2-13) + top3(14) + result(15)
   var ADMIN_EMAIL = 'kydiazdo@gmail.com';
 
   async function submitToGoogleSheet(source, version, respondentId, base64Payload) {
@@ -572,13 +572,30 @@ h1 {
     });
   })();
 
+  // ─── Remove variants with unfair weekend distribution ───
+  // Target: ~4 weekend nights (Fri+Sat) per month. These deviate significantly.
+  var EXCLUDED_VARIANTS = [
+    '6on8off__saturday',        // 2.17/mo — too few weekends
+    '6on8off__sunday',          // 2.17/mo
+    '3on1off3on7off__tuesday',  // 2.17/mo
+    '3on1off3on7off__wednesday',// 2.17/mo
+    '4on1off2on7off__monday',   // 2.17/mo
+    '4on1off2on7off__tuesday',  // 2.17/mo
+    '3on2off3on6off__tuesday',  // 0.00/mo — zero weekend nights
+    '3on2off3on6off__monday',   // 2.17/mo
+    '3on2off3on6off__wednesday',// 2.17/mo
+    '3on2off3on6off__friday',   // 6.50/mo — too many weekends
+    '3on2off3on6off__saturday'  // 6.50/mo
+  ];
+  EXCLUDED_VARIANTS.forEach(function(vid) { delete ALL_VARIANTS[vid]; });
+
   function fmtDate(d) {
     return d.getFullYear() + '-' +
       String(d.getMonth() + 1).padStart(2, '0') + '-' +
       String(d.getDate()).padStart(2, '0');
   }
 
-  // ─── Stratified Random Sampling (14 per respondent) ───
+  // ─── Stratified Random Sampling (12 per respondent) ───
   function shuffle(arr) {
     for (var i = arr.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
@@ -611,9 +628,9 @@ h1 {
     });
     shuffle(remaining);
 
-    // pick 5 more (14 - 9 = 5), max 3 total per pattern
+    // pick 3 more (12 - 9 = 3), max 3 total per pattern
     var picked = 0;
-    for (var i = 0; i < remaining.length && picked < 5; i++) {
+    for (var i = 0; i < remaining.length && picked < 3; i++) {
       var pid = remaining[i].patternId;
       if ((cnt[pid] || 0) < 3) {
         selected.push(remaining[i]);
@@ -858,7 +875,7 @@ h1 {
 
     submit: async function() {
       var data = {
-        surveyVersion: '2.1',
+        surveyVersion: '2.2',
         timestamp: new Date().toISOString(),
         variantsPresented: selected.map(function(v) { return v.variantId; }),
         ratings: selected.map(function(v, i) {

@@ -336,7 +336,7 @@ export default function AdminImport() {
               {fetching ? 'Fetching...' : '⬇ Fetch from Google Sheet'}
             </button>
             <span style={{ fontSize: 14, color: '#8888aa', fontWeight: 600 }}>
-              {responses.length} of {TOTAL_MDS} responses imported
+              {responses.length} responses imported
             </span>
           </div>
           {error && <div style={{ color: '#ef4444', fontSize: 13, marginTop: 8 }}>{error}</div>}
@@ -548,7 +548,7 @@ export default function AdminImport() {
             <div style={s.card}>
               <h2 style={s.h2}>Response Summary</h2>
               <p style={{ fontSize: 15, color: '#e0e8f0', marginBottom: 12 }}>
-                <strong>{agg.n}</strong> of <strong>{TOTAL_MDS}</strong> responses collected
+                <strong>{agg.n}</strong> responses collected
               </p>
 
               <div style={{ display: 'flex', gap: 12, marginTop: 16, flexWrap: 'wrap' }}>
