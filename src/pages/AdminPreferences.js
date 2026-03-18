@@ -143,7 +143,10 @@ function IndividualView({ data }) {
       </Section>
 
       <Section title="Location">
-        <Row label="Top 3" value={data.locations?.top3?.join(', ')} />
+        <Row label="Top 3" value={data.locations?.top3?.map(h => {
+          const pct = data.locations?.percentages?.[h];
+          return pct !== undefined ? `${h} (${pct}%)` : h;
+        }).join(', ')} />
         <Row label="Alternate" value={data.locations?.alternate} />
         {data.locations?.commute_minutes && Object.entries(data.locations.commute_minutes).map(([h, m]) => (
           <Row key={h} label={`Commute to ${h}`} value={`${m} min`} />

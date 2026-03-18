@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router';
-import { PATTERNS, START_DAYS, TOTAL_MDS, APPS_SCRIPT_URL } from '../data/constants';
+import { PATTERNS, START_DAYS, APPS_SCRIPT_URL } from '../data/constants';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   Cell,
