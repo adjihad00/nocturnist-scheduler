@@ -92,15 +92,22 @@ input[type=number],input[type=text],textarea{
 textarea{min-height:80px;resize:vertical}
 input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
-/* Rank select row */
-.rank-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
-.rank-row select{
-  width:60px;padding:10px 8px;border-radius:var(--radius-sm);
-  border:1px solid var(--border);background:var(--bg);color:var(--text);
-  font-size:14px;font-family:inherit;appearance:none;text-align:center;
+/* Rank list */
+.rank-list{display:flex;flex-direction:column;gap:6px}
+.rank-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:12px 14px;user-select:none;transition:border-color 0.15s;
 }
-.rank-row select:focus{outline:none;border-color:var(--accent)}
-.rank-row .rank-label{font-size:14px;color:var(--text)}
+.rank-item .rank-num{font-size:14px;font-weight:800;color:var(--accent);min-width:20px}
+.rank-item .rank-label{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.rank-item .rank-arrows{display:flex;flex-direction:column;gap:4px;margin-left:auto}
+.rank-item .rank-arrows button{
+  background:var(--bg2);border:1px solid var(--border);color:var(--accent);cursor:pointer;font-size:18px;font-weight:700;
+  padding:4px 10px;line-height:1;min-height:34px;min-width:34px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-family:inherit;
+}
+.rank-item .rank-arrows button:active{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* Inline number */
 .inline-num{display:flex;align-items:center;gap:10px}
@@ -419,7 +426,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
       <div class="field">
         <label class="field-label">Rank these models from MOST preferred (1) to LEAST preferred (5):</label>
-        <p class="field-sublabel">Each number should be used exactly once</p>
+        <p class="field-sublabel">Use the arrows to reorder. #1 = most preferred.</p>
         <div id="q18Ranks"></div>
       </div>
 
@@ -427,7 +434,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
       <div class="field">
         <label class="field-label">Rank what matters MOST to you in any scheduling system:</label>
-        <p class="field-sublabel">1 = most important, 5 = least important</p>
+        <p class="field-sublabel">Use the arrows to reorder. #1 = most important.</p>
         <div id="q19Ranks"></div>
       </div>
 
@@ -703,24 +710,70 @@ function buildCheckboxGroup(containerId, options, stateKey) {
 
 function buildRankGroup(containerId, items, stateKey) {
   var container = document.getElementById(containerId);
-  items.forEach(function(item) {
-    var row = document.createElement('div');
-    row.className = 'rank-row';
-    var sel = document.createElement('select');
-    sel.innerHTML = '<option value="">—</option>';
-    for (var i = 1; i <= items.length; i++) {
-      sel.innerHTML += '<option value="' + i + '">' + i + '</option>';
-    }
-    sel.addEventListener('change', function() {
-      state[stateKey][item.key] = sel.value;
+  container.className = 'rank-list';
+  var order = items.map(function(item) { return item.key; });
+
+  function renderRankList() {
+    container.innerHTML = '';
+    order.forEach(function(key, idx) {
+      var item = items.find(function(i) { return i.key === key; });
+      var div = document.createElement('div');
+      div.className = 'rank-item';
+
+      var num = document.createElement('span');
+      num.className = 'rank-num';
+      num.textContent = (idx + 1);
+
+      var label = document.createElement('span');
+      label.className = 'rank-label';
+      label.textContent = item.label;
+
+      var arrows = document.createElement('div');
+      arrows.className = 'rank-arrows';
+
+      var upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.textContent = '\u25B2';
+      upBtn.addEventListener('click', function() {
+        if (idx > 0) {
+          var tmp = order[idx - 1];
+          order[idx - 1] = order[idx];
+          order[idx] = tmp;
+          syncState();
+          renderRankList();
+        }
+      });
+
+      var downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.textContent = '\u25BC';
+      downBtn.addEventListener('click', function() {
+        if (idx < order.length - 1) {
+          var tmp = order[idx + 1];
+          order[idx + 1] = order[idx];
+          order[idx] = tmp;
+          syncState();
+          renderRankList();
+        }
+      });
+
+      arrows.appendChild(upBtn);
+      arrows.appendChild(downBtn);
+      div.appendChild(num);
+      div.appendChild(label);
+      div.appendChild(arrows);
+      container.appendChild(div);
     });
-    var label = document.createElement('span');
-    label.className = 'rank-label';
-    label.textContent = item.label;
-    row.appendChild(sel);
-    row.appendChild(label);
-    container.appendChild(row);
-  });
+  }
+
+  function syncState() {
+    order.forEach(function(key, idx) {
+      state[stateKey][key] = String(idx + 1);
+    });
+  }
+
+  syncState();
+  renderRankList();
 }
 
 function buildLikertTable() {
@@ -749,18 +802,18 @@ function buildLikertTable() {
 function buildSatRow() {
   var container = document.getElementById('q20Row');
   for (var i = 1; i <= 10; i++) {
-    var btn = document.createElement('button');
-    btn.className = 'sat-btn';
-    btn.textContent = i;
-    btn.type = 'button';
     (function(val) {
+      var btn = document.createElement('button');
+      btn.className = 'sat-btn';
+      btn.textContent = val;
+      btn.type = 'button';
       btn.addEventListener('click', function() {
         state.q20 = String(val);
         container.querySelectorAll('.sat-btn').forEach(function(b) { b.classList.remove('selected'); });
         btn.classList.add('selected');
       });
+      container.appendChild(btn);
     })(i);
-    container.appendChild(btn);
   }
 }
 

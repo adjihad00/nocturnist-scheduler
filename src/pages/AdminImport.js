@@ -294,20 +294,15 @@ export default function AdminImport() {
     <div style={s.page}>
       <div style={s.wrap}>
         {/* Header */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={s.tag}>ADMIN TOOLS</div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h1 style={{ fontSize: 26, fontWeight: 800, color: '#f0f4fa', margin: 0 }}>
-              Survey Import
-            </h1>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <Link to="/admin/preferences" style={{ color: '#3ba4e0', fontSize: 13, textDecoration: 'none' }}>
-                Preference Import
-              </Link>
-              <Link to="/" style={{ color: '#3ba4e0', fontSize: 13, textDecoration: 'none' }}>
-                &larr; Explorer
-              </Link>
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div>
+            <div style={s.tag}>NOCTURNIST SCHEDULING</div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, color: '#f0f4fa' }}>Survey Import</h1>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Link to="/" style={{ ...s.btn, ...s.btnSecondary, textDecoration: 'none' }}>Explorer</Link>
+            <Link to="/admin/preferences" style={{ ...s.btn, ...s.btnSecondary, textDecoration: 'none' }}>Preferences</Link>
+            <Link to="/admin/opinions" style={{ ...s.btn, ...s.btnSecondary, textDecoration: 'none' }}>Opinions</Link>
           </div>
         </div>
 

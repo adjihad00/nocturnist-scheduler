@@ -79,11 +79,13 @@ export default function App() {
         <ComparisonTable patterns={summary} selected={selected} onSelect={setSelected} />
 
         <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11, color: '#444466' }}>
-          Nocturnist Schedule Analysis &middot; v1.0 &middot; Phase 1: Pattern Exploration
+          Nocturnist Schedule Analysis &middot; v1.0 &middot; Data Collection &amp; Analysis
           <span style={{ margin: '0 8px' }}>&middot;</span>
           <Link to="/admin/import" style={{ color: '#3ba4e0', textDecoration: 'none' }}>Survey Import</Link>
           <span style={{ margin: '0 8px' }}>&middot;</span>
           <Link to="/admin/preferences" style={{ color: '#3ba4e0', textDecoration: 'none' }}>Preference Import</Link>
+          <span style={{ margin: '0 8px' }}>&middot;</span>
+          <Link to="/admin/opinions" style={{ color: '#3ba4e0', textDecoration: 'none' }}>Opinion Survey</Link>
         </div>
       </div>
     </div>
