@@ -1,10 +1,10 @@
 # Nocturnist Scheduler — Project Context
-## Last Updated: 2026-03-12
+## Last Updated: 2026-03-22
 
 ---
 
 ## Project Overview
-Building a templated nocturnist schedule system for a physician group. The goal is to find optimal schedule patterns that maximize night coverage while providing rhythmic, predictable schedules. Physicians will rate proposed patterns AND submit individual preferences. The most desirable schedule will be presented to administration for approval.
+Data collection and analysis platform for nocturnist scheduling. This repo provides tools for gathering physician opinions, schedule pattern ratings, and individual preferences — then analyzing the data to inform scheduling decisions. The actual scheduling program is being developed in a separate repository. Physicians rate proposed patterns, submit individual preferences, and provide opinions on scheduling models. The collected data drives evidence-based scheduling decisions for administration.
 
 ---
 
@@ -150,8 +150,21 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 13. **Holiday options:** New Year's Eve, New Year's Day, Easter, Memorial Day, Independence Day, Labor Day, Halloween, Veterans Day
 14. **Coding done in Claude Code** — tracked via GitHub repo `nocturnist-scheduler`
 15. **Spreadsheet maintained separately** — for admin's own analysis/manipulation
-16. **Auto-submit via Google Apps Script** — both survey.html and preferences.html POST to a Google Apps Script web app that appends rows to a Google Sheet. Uses `no-cors` mode + `text/plain` Content-Type to avoid CORS preflight. Config in `config.js`. Manual copy/email fallback preserved.
-17. **Admin fetch from Google Sheet** — both admin pages (AdminImport, AdminPreferences) have a "Fetch from Google Sheet" button that calls the Apps Script `doGet(?sheet=...)` endpoint, decodes each row's Base64 payload, and imports into localStorage. Deduplicates by timestamp (survey) or physician name with latest-wins (preferences).
+16. **Auto-submit via Google Apps Script** — survey.html, preferences.html, and opinion.html POST to a Google Apps Script web app that appends rows to a Google Sheet. Uses `no-cors` mode + `text/plain` Content-Type to avoid CORS preflight. Config in `config.js`. Manual copy/email fallback preserved.
+17. **Admin fetch from Google Sheet** — all admin pages (AdminImport, AdminPreferences, AdminOpinion) have a "Fetch from Google Sheet" button that calls the Apps Script `doGet(?sheet=...)` endpoint, decodes each row's Base64 payload, and imports into localStorage. Deduplicates by physician name with latest-wins.
+18. **Opinion survey data points:**
+    - Physician name (dropdown), FTE, couple status
+    - Current system satisfaction (1-5), HPR usage, LPR usage, vacation usage
+    - Current system problems (multi-select + free text)
+    - 7-on/10-off template support (1-5), 8 concern areas (1-5 Likert each)
+    - Retention intent if template implemented (5 options)
+    - Acceptability conditions (multi-select)
+    - Problem perception (4 options)
+    - 4 alternative models rated (Block Template, Team Self-Schedule, Graduated, Enhanced Status Quo)
+    - Model ranking (1-5), priority ranking (flexibility/predictability/fairness/coverage/autonomy)
+    - Job satisfaction (1-10), open response
+19. **This repo is for data collection & analysis** — actual scheduling program is in a separate repository
+20. **Opinion survey return method:** auto-submit to Google Sheet via Apps Script + copy-paste Base64 code as fallback + mailto link
 
 ---
 
@@ -185,19 +198,17 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 - Admin import at `/admin/preferences` — paste codes, submitted/missing tracker (X of 19), aggregate dashboard (block histograms, day heatmap with callouts, time rank charts with consensus indicator, hospital popularity + avg commute, holiday ranking, swap willingness pie chart, motivator rankings bar chart, desirability stacked bars, constraints summary, block swap summary, weekend summary with night priority), individual physician view, CSV/JSON export
 - localStorage key: `nocturnist_preferences`
 
-### Phase 3: Personalized Schedule Preview (PLANNED)
-- Calendar view showing each physician's actual schedule under chosen pattern
-- Hospital rotation based on assignment percentages
-- "What does MY year look like" view
+### Phase 2C: Group Opinion Survey ✅ COMPLETE
+- `opinion.html` — standalone offline file, dark theme, mobile responsive
+- 6 screens: physician info → current system assessment → template proposal assessment → alternative models → rankings & priorities → review & submit
+- Two opinion sections combined: "Current vs Template" and "Alternatives"
+- Auto-submit to Google Sheet via Apps Script + Base64 code fallback + mailto link
+- Admin import at `/admin/opinions` — paste codes, fetch from sheet, submission tracker, aggregate dashboard (satisfaction distribution, template support, concern heatmap, retention risk pie, alternative model ratings, model rankings, priority rankings, problem perception, open responses), individual physician view, CSV/JSON export
+- localStorage key: `nocturnist_opinions`
 
-### Phase 4: Mock Template Schedule (PLANNED)
-- Build full templated schedule using winning pattern(s) + preference data
-- Assign all 19 physicians across 7 hospitals respecting percentages and preferences
-- Present to nocturnists for approval rating
-- Iterate until satisfactory
-
-### Phase 5: Administration Presentation (PLANNED)
-- Final schedule presented to administration for sign-off
+### Future: Scheduling Program (SEPARATE REPO)
+- Actual scheduling program development moved to a separate repository
+- This repo remains the data collection & analysis platform
 
 ---
 
@@ -207,7 +218,7 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 nocturnist-scheduler/
 ├── public/
 ├── src/
-│   ├── index.js                   # Router: /, /admin/import, /admin/preferences
+│   ├── index.js                   # Router: /, /admin/import, /admin/preferences, /admin/opinions
 │   ├── App.js                     # Phase 1: Pattern Explorer dashboard
 │   ├── components/
 │   │   ├── PatternCard.js         # Pattern selection cards
@@ -218,7 +229,8 @@ nocturnist-scheduler/
 │   │   └── StaggerGrid.js        # Stagger group grid
 │   ├── pages/
 │   │   ├── AdminImport.js         # Phase 2A: anonymous survey import + aggregate
-│   │   └── AdminPreferences.js    # Phase 2B: preference import + per-physician + aggregate
+│   │   ├── AdminPreferences.js    # Phase 2B: preference import + per-physician + aggregate
+│   │   └── AdminOpinion.js        # Phase 2C: opinion survey import + aggregate + open responses
 │   ├── data/
 │   │   └── constants.js           # Hospitals, patterns, physicians, rating factors
 │   └── utils/
@@ -229,6 +241,7 @@ nocturnist-scheduler/
 │   └── SETUP.md                   # Deployment instructions
 ├── survey.html                    # Phase 2A: anonymous pattern rating (offline)
 ├── preferences.html               # Phase 2B: named preference collection (offline)
+├── opinion.html                   # Phase 2C: group opinion survey (offline)
 ├── PHASE2_SPEC_v2.md
 ├── PREFERENCES_SPEC.md
 ├── physician_assignments.md
@@ -258,6 +271,7 @@ nocturnist-scheduler/
 - Rating factor keys: `wlb`, `sleep`, `wknd`, `consec`, `predict`
 - Preference survey localStorage key: `nocturnist_preferences`
 - Pattern survey localStorage key: `nocturnist_survey`
+- Opinion survey localStorage key: `nocturnist_opinions`
 
 ---
 
@@ -268,5 +282,6 @@ nocturnist-scheduler/
 - [ ] Admin import tool for survey — needs update at `/admin/import` to support v2.0 data format
 - [x] `preferences.html` — ✅ built (Phase 2B)
 - [x] Admin preferences import tool — ✅ built at `/admin/preferences` (Phase 2B)
-- [ ] Personalized calendar preview (Phase 3)
-- [x] Admin email address set to `kydiazdo@gmail.com` in `preferences.html`
+- [x] `opinion.html` — ✅ built (Phase 2C)
+- [x] Admin opinion import tool — ✅ built at `/admin/opinions` (Phase 2C)
+- [x] Admin email address set to `kydiazdo@gmail.com` in `preferences.html` and `opinion.html`

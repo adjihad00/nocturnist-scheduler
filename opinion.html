@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Nocturnist Opinion Survey</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a14;--bg2:#14142a;--bg3:#1a1a2e;--border:#2a2a40;
+  --text:#e0e0f0;--text2:#8888aa;--text3:#6666aa;--accent:#3ba4e0;
+  --green:#12b886;--red:#ef4444;--warn:#fbbf24;
+  --radius:12px;--radius-sm:10px;
+}
+html{font-size:16px}
+body{
+  background:linear-gradient(180deg,var(--bg) 0%,#0e0e1a 50%,#12121e 100%);
+  color:var(--text);font-family:'SF Pro Display',-apple-system,'Segoe UI',sans-serif;
+  min-height:100vh;min-height:100dvh;
+  -webkit-tap-highlight-color:transparent;
+}
+.container{max-width:640px;margin:0 auto;padding:20px 16px 40px}
+.tag{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+h1{font-size:24px;font-weight:800;color:#f0f4fa;line-height:1.15;letter-spacing:-0.5px}
+h2{font-size:16px;font-weight:700;color:#c0c8e0;margin-bottom:12px}
+h3{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+p{font-size:14px;line-height:1.5;color:var(--text2)}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:14px 28px;border-radius:var(--radius-sm);border:none;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;
+  min-height:48px;min-width:48px;font-family:inherit;
+}
+.btn-primary{background:linear-gradient(135deg,#1b6ca8,#3ba4e0);color:#fff}
+.btn-primary:disabled{opacity:0.4;cursor:not-allowed}
+.btn-secondary{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-block{display:flex;width:100%}
+.btn-sm{padding:10px 16px;font-size:13px;min-height:44px}
+
+/* Progress bar */
+.progress-wrap{margin-bottom:20px}
+.progress-steps{display:flex;gap:4px;margin-bottom:6px}
+.progress-step{flex:1;height:4px;border-radius:2px;background:var(--border);transition:background 0.3s}
+.progress-step.done{background:var(--accent)}
+.progress-step.active{background:var(--green)}
+.progress-label{font-size:11px;color:var(--text3)}
+
+/* Screens */
+.screen{display:none;animation:fadeIn 0.25s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Form controls */
+.field{margin-bottom:20px}
+.field-label{display:block;font-size:13px;font-weight:600;color:#c0c8e0;margin-bottom:8px}
+.field-sublabel{font-size:12px;color:var(--text3);margin-bottom:8px}
+
+/* Radio/checkbox option cards */
+.opt-group{display:flex;flex-direction:column;gap:8px}
+.opt-card{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);cursor:pointer;transition:all 0.15s;
+}
+.opt-card:hover{border-color:#3a3a5a}
+.opt-card.selected{border-color:var(--accent);background:#0d1b2a}
+.opt-card .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.opt-card.selected .radio{border-color:var(--accent)}
+.opt-card.selected .radio::after{content:'';width:10px;height:10px;border-radius:50%;background:var(--accent)}
+.opt-card .checkbox{width:20px;height:20px;border-radius:4px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.opt-card.selected .checkbox{border-color:var(--accent);background:var(--accent)}
+.opt-card.selected .checkbox::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.opt-label{font-size:14px;font-weight:600;color:var(--text)}
+.opt-desc{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* Likert grid */
+.likert-wrap{overflow-x:auto;margin-bottom:16px}
+.likert-table{width:100%;border-collapse:collapse;min-width:400px}
+.likert-table th{padding:8px 4px;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;text-align:center;border-bottom:1px solid var(--border)}
+.likert-table th:first-child{text-align:left;min-width:140px}
+.likert-table td{padding:10px 4px;text-align:center;border-bottom:1px solid #1a1a30;font-size:13px;color:var(--text)}
+.likert-table td:first-child{text-align:left;font-size:13px;font-weight:500}
+.likert-table input[type=radio]{accent-color:var(--accent);width:18px;height:18px;cursor:pointer}
+
+/* Number input */
+input[type=number],input[type=text],textarea{
+  width:100%;padding:12px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  font-size:14px;font-family:inherit;
+}
+textarea{min-height:80px;resize:vertical}
+input:focus,textarea:focus{outline:none;border-color:var(--accent)}
+
+/* Rank select row */
+.rank-row{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.rank-row select{
+  width:60px;padding:10px 8px;border-radius:var(--radius-sm);
+  border:1px solid var(--border);background:var(--bg);color:var(--text);
+  font-size:14px;font-family:inherit;appearance:none;text-align:center;
+}
+.rank-row select:focus{outline:none;border-color:var(--accent)}
+.rank-row .rank-label{font-size:14px;color:var(--text)}
+
+/* Inline number */
+.inline-num{display:flex;align-items:center;gap:10px}
+.inline-num input{max-width:80px;text-align:center}
+.inline-num .unit{font-size:12px;color:var(--text3)}
+
+/* Job satisfaction scale */
+.sat-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.sat-btn{
+  width:44px;height:44px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  background:var(--bg);color:var(--text2);font-size:16px;font-weight:700;
+  cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;
+  font-family:inherit;
+}
+.sat-btn.selected{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* Model description card */
+.model-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:12px}
+.model-card h4{font-size:15px;font-weight:700;color:#f0f4fa;margin-bottom:8px}
+.model-card .tag-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.model-tag{
+  display:inline-block;padding:2px 8px;border-radius:4px;
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+}
+.tag-blue{background:#0d1b2a;color:#3ba4e0;border:1px solid #1b3a5c}
+.tag-green{background:#0d2a1b;color:#12b886;border:1px solid #1b5c3a}
+.tag-yellow{background:#2a2a0d;color:#fbbf24;border:1px solid #5c5c1b}
+.model-card ul{margin:0 0 0 16px;font-size:13px;color:var(--text2);line-height:1.6}
+.model-card ul li{margin-bottom:4px}
+
+/* Code box */
+.code-box{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:12px;
+  color:var(--green);word-break:break-all;max-height:200px;overflow-y:auto;
+  margin-bottom:12px;
+}
+.copied-msg{color:var(--green);font-size:13px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px}
+
+/* Section divider */
+.section-divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* Review */
+.review-section{margin-bottom:16px}
+.review-section .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.review-section .section-head h3{margin:0}
+.review-section .edit-link{font-size:12px;color:var(--accent);cursor:pointer;text-decoration:none;min-height:44px;display:flex;align-items:center}
+.review-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid #1a1a30}
+.review-row .rlabel{color:var(--text2)}
+.review-row .rvalue{color:var(--text);font-weight:600;text-align:right;max-width:60%}
+
+.submit-status-ok{color:#4ade80;font-weight:600;margin-bottom:12px}
+.submit-status-fallback{color:#fbbf24;font-weight:600;margin-bottom:12px}
+
+@media(max-width:400px){
+  .container{padding:16px 12px 32px}
+  h1{font-size:20px}
+  .opt-card{padding:12px}
+  .sat-btn{width:38px;height:38px;font-size:14px}
+}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+<div class="container" id="app">
+
+  <!-- Progress Bar -->
+  <div class="progress-wrap" id="progressWrap" style="display:none">
+    <div class="progress-steps" id="progressSteps"></div>
+    <div class="progress-label" id="progressLabel"></div>
+  </div>
+
+  <!-- Screen 1: Welcome / Physician ID -->
+  <div class="screen active" id="screen1">
+    <div class="tag">NOCTURNIST SCHEDULING</div>
+    <h1 style="margin-bottom:8px">Group Opinion Survey</h1>
+    <p style="margin-bottom:24px">Your opinion on the current scheduling system, the proposed template, and alternative models. Responses are confidential to the scheduling committee. Takes about 8 minutes.</p>
+    <div class="card">
+      <h2>Who are you?</h2>
+      <p class="field-sublabel">Responses are confidential to the scheduling committee only.</p>
+      <select id="physicianSelect" style="width:100%;padding:14px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit">
+        <option value="">Select your name...</option>
+      </select>
+      <div class="field" style="margin-top:16px">
+        <label class="field-label">Current FTE</label>
+        <div class="opt-group" id="fteOptions"></div>
+        <div id="fteOtherWrap" style="display:none;margin-top:8px">
+          <input type="number" id="fteOtherVal" min="0.1" max="1.0" step="0.05" placeholder="e.g. 0.6" style="max-width:140px">
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Do you have a spouse/partner who is also a nocturnist in this group?</label>
+        <div class="opt-group" id="coupleOptions"></div>
+      </div>
+      <button class="btn btn-primary btn-block" style="margin-top:16px" id="btnStart" disabled>Continue</button>
+    </div>
+  </div>
+
+  <!-- Screen 2: Current System Assessment -->
+  <div class="screen" id="screen2">
+    <div class="card">
+      <h2>Current Scheduling System</h2>
+      <p style="margin-bottom:16px">How well does the current system work for you?</p>
+
+      <div class="field">
+        <label class="field-label">How satisfied are you with the CURRENT scheduling system?</label>
+        <div class="opt-group" id="q1Options"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">In a typical month, how many of your 10 High Priority Requests do you actually use?</label>
+        <div class="inline-num">
+          <input type="number" id="q2Val" min="0" max="10" placeholder="0-10">
+          <span class="unit">out of 10 available</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">How many of your 3 Low Priority Requests do you typically use per month?</label>
+        <div class="inline-num">
+          <input type="number" id="q3Val" min="0" max="3" placeholder="0-3">
+          <span class="unit">out of 3 available</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Do you typically use all 21 vacation days per year?</label>
+        <div class="opt-group" id="q4Options"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">What is the BIGGEST problem with the current system, if any?</label>
+        <p class="field-sublabel">Select all that apply</p>
+        <div class="opt-group" id="q5Options"></div>
+        <textarea id="q5Other" rows="2" placeholder="If 'Other', describe..." style="margin-top:8px"></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(1)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="goScreen(3)">Next</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: Template Proposal Assessment -->
+  <div class="screen" id="screen3">
+    <div class="card">
+      <h2>Proposed 7-on / 10-off Annual Template</h2>
+      <div class="model-card" style="margin-bottom:16px">
+        <p style="font-size:13px;color:var(--text2);line-height:1.5">As proposed: A fixed annual template where each nocturnist works 7 consecutive nights on, 10 nights off, repeating for the full fiscal year. Schedule known in July for the entire year. No HPRs. 10-hour shifts.</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Overall, how do you feel about the proposed 7-on/10-off annual template?</label>
+        <div class="opt-group" id="q6Options"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Rate your level of concern for each of the following:</label>
+        <div class="likert-wrap">
+          <table class="likert-table" id="q7Table">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Not concerned</th>
+                <th>Slightly</th>
+                <th>Moderate</th>
+                <th>Very</th>
+                <th>Critical</th>
+              </tr>
+            </thead>
+            <tbody id="q7Body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">If the 7-on/10-off annual template is implemented as proposed, what would you most likely do?</label>
+        <div class="opt-group" id="q8Options"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">What would make the 7-on/10-off template ACCEPTABLE to you?</label>
+        <p class="field-sublabel">Select all that apply</p>
+        <div class="opt-group" id="q9Options"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Do you believe there is a scheduling problem that needs to be solved?</label>
+        <div class="opt-group" id="q10Options"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(2)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="goScreen(4)">Next: Alternatives</button>
+    </div>
+  </div>
+
+  <!-- Screen 4: Alternative Models -->
+  <div class="screen" id="screen4">
+    <div class="card">
+      <h2>Alternative Scheduling Models</h2>
+      <p style="margin-bottom:16px">Rate each alternative and tell us what you prefer.</p>
+
+      <!-- Model A -->
+      <div class="model-card">
+        <h4>Model A: Block Template (Quarterly/Trimester)</h4>
+        <div class="tag-row">
+          <span class="model-tag tag-blue">Template-Based</span>
+          <span class="model-tag tag-green">Shorter Commitment</span>
+          <span class="model-tag tag-yellow">Requests Preserved</span>
+        </div>
+        <ul>
+          <li>Year divided into 3 or 4 blocks</li>
+          <li>Preferences submitted in advance of each block</li>
+          <li>Reduced HPRs (e.g., 5/month) but still available</li>
+          <li>Vacation days allocated per block proportionally</li>
+          <li>Template can vary block-to-block based on group needs</li>
+        </ul>
+      </div>
+      <div class="field">
+        <label class="field-label">How would you rate Block Templates?</label>
+        <div class="opt-group" id="q11Options"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">Preferred block length?</label>
+        <div class="opt-group" id="q12Options"></div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Model B -->
+      <div class="model-card">
+        <h4>Model B: Team-Based Self-Scheduling</h4>
+        <div class="tag-row">
+          <span class="model-tag tag-blue">Team Structure</span>
+          <span class="model-tag tag-green">Self-Schedule</span>
+          <span class="model-tag tag-yellow">Coverage Guaranteed</span>
+        </div>
+        <ul>
+          <li>Nocturnists divided into staggered teams for coverage</li>
+          <li>Each team has a template slot; self-schedule into your assigned slots</li>
+          <li>Trades/swaps managed within and across teams</li>
+          <li>Generalist coverage built around nocturnist template</li>
+        </ul>
+      </div>
+      <div class="field">
+        <label class="field-label">How would you rate Team-Based Self-Scheduling?</label>
+        <div class="opt-group" id="q13Options"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">What concerns do you have about this model?</label>
+        <p class="field-sublabel">Select all that apply</p>
+        <div class="opt-group" id="q14Options"></div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Model C -->
+      <div class="model-card">
+        <h4>Model C: Graduated Transition (Phased)</h4>
+        <div class="tag-row">
+          <span class="model-tag tag-blue">Phased</span>
+          <span class="model-tag tag-green">Preserves Current</span>
+          <span class="model-tag tag-yellow">12-Month Rollout</span>
+        </div>
+        <ul>
+          <li><strong style="color:var(--text)">Phase 1 (Mo 1-3):</strong> Current system maintained. Software upgraded. HPRs 10 → 8.</li>
+          <li><strong style="color:var(--text)">Phase 2 (Mo 4-6):</strong> 1 anchor block/quarter. Self-schedule the rest. HPRs at 6.</li>
+          <li><strong style="color:var(--text)">Phase 3 (Mo 7-9):</strong> 2 anchor blocks/quarter. HPRs at 4. Coverage review.</li>
+          <li><strong style="color:var(--text)">Phase 4 (Mo 10-12):</strong> Full assessment. Group votes to continue, hold, or revert.</li>
+          <li>Built-in off-ramp: group can halt at any phase</li>
+        </ul>
+      </div>
+      <div class="field">
+        <label class="field-label">How would you rate the Graduated Transition model?</label>
+        <div class="opt-group" id="q15Options"></div>
+      </div>
+      <div class="field">
+        <label class="field-label">What is the most important feature of this phased approach?</label>
+        <div class="opt-group" id="q16Options"></div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Model D -->
+      <div class="model-card">
+        <h4>Model D: Enhanced Status Quo (No Template)</h4>
+        <div class="tag-row">
+          <span class="model-tag tag-green">Current System</span>
+          <span class="model-tag tag-blue">Software Upgrade</span>
+          <span class="model-tag tag-yellow">Coverage Incentives</span>
+        </div>
+        <ul>
+          <li>Keep current self-scheduling with HPRs and vacation intact</li>
+          <li>Invest in better scheduling software</li>
+          <li>Nocturnist schedule published earlier</li>
+          <li>Add coverage incentives for hard-to-fill shifts</li>
+          <li>Algorithm-assisted schedule optimization</li>
+        </ul>
+      </div>
+      <div class="field">
+        <label class="field-label">How would you rate Enhanced Status Quo?</label>
+        <div class="opt-group" id="q17Options"></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(3)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="goScreen(5)">Next: Rankings</button>
+    </div>
+  </div>
+
+  <!-- Screen 5: Final Rankings & Open Response -->
+  <div class="screen" id="screen5">
+    <div class="card">
+      <h2>Final Rankings & Priorities</h2>
+
+      <div class="field">
+        <label class="field-label">Rank these models from MOST preferred (1) to LEAST preferred (5):</label>
+        <p class="field-sublabel">Each number should be used exactly once</p>
+        <div id="q18Ranks"></div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field">
+        <label class="field-label">Rank what matters MOST to you in any scheduling system:</label>
+        <p class="field-sublabel">1 = most important, 5 = least important</p>
+        <div id="q19Ranks"></div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field">
+        <label class="field-label">How would you rate your current overall job satisfaction as a nocturnist?</label>
+        <div class="sat-row" id="q20Row"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px">
+          <span style="font-size:11px;color:var(--text3)">Very Low</span>
+          <span style="font-size:11px;color:var(--text3)">Excellent</span>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <div class="field">
+        <label class="field-label">Is there anything else you want administration to understand?</label>
+        <p class="field-sublabel">About how this change would affect you, your family, or your career. This response will be included verbatim in the committee's report.</p>
+        <textarea id="q21Text" rows="5" placeholder="Speak freely..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <button class="btn btn-secondary" onclick="goScreen(4)">Back</button>
+      <button class="btn btn-primary" style="flex:1" onclick="goScreen(6)">Review & Submit</button>
+    </div>
+  </div>
+
+  <!-- Screen 6: Review & Submit -->
+  <div class="screen" id="screen6">
+    <div class="card">
+      <h2>Review Your Responses</h2>
+      <p style="margin-bottom:16px">Please review before submitting. Tap "Edit" to change any section.</p>
+      <div id="reviewContent"></div>
+    </div>
+    <div id="submitStatus"></div>
+    <button class="btn btn-primary btn-block" id="btnSubmit" onclick="submitSurvey()">Submit Survey</button>
+    <div style="display:flex;gap:12px;margin-top:12px">
+      <button class="btn btn-secondary" onclick="goScreen(5)">Back</button>
+    </div>
+
+    <!-- Fallback code box (shown after submit) -->
+    <div id="fallbackWrap" style="display:none;margin-top:20px">
+      <div class="card">
+        <h3 style="margin-top:0">Backup: Copy Your Response Code</h3>
+        <p style="margin-bottom:12px">If auto-submit didn't work, copy this code and send it to the scheduling committee.</p>
+        <div class="code-box" id="codeBox"></div>
+        <button class="btn btn-sm btn-secondary" onclick="copyCode()">Copy Code</button>
+        <div id="copiedMsg"></div>
+        <div style="margin-top:12px">
+          <a id="mailtoLink" class="btn btn-sm btn-secondary" style="text-decoration:none;display:inline-flex">Email to Committee</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── CONSTANTS ───
+var PHYSICIANS = [
+  'Diaz','Diamant','Cook','Cabanis','Reyes','Dupuis','Russell','Farris',
+  'Johnson','Shipley','Roth','Bogart','Nicks','Brittain','Wright','Mulji',
+  'Moore','Nagy','Pitts'
+];
+var ADMIN_EMAIL = 'kydiazdo@gmail.com';
+var TOTAL_SCREENS = 6;
+
+var FTE_OPTIONS = [
+  { val: '1.0', label: '1.0 FTE (full time)' },
+  { val: '0.9', label: '0.9 FTE' },
+  { val: '0.85', label: '0.85 FTE' },
+  { val: '0.8', label: '0.8 FTE' },
+  { val: 'other', label: 'Other' }
+];
+
+var Q1_OPTIONS = [
+  { val: '5', label: 'Very satisfied — works well for me' },
+  { val: '4', label: 'Mostly satisfied — minor issues' },
+  { val: '3', label: 'Neutral — has pros and cons' },
+  { val: '2', label: 'Mostly dissatisfied — needs improvement' },
+  { val: '1', label: 'Very dissatisfied — fundamentally broken' }
+];
+
+var Q4_OPTIONS = [
+  { val: 'all', label: 'Yes — all 21' },
+  { val: 'most', label: 'Most (15-20)' },
+  { val: 'some', label: 'Some (8-14)' },
+  { val: 'few', label: 'Few (< 8)' }
+];
+
+var Q5_OPTIONS = [
+  { val: 'none', label: 'No significant problems' },
+  { val: 'gaps', label: 'Too many unfilled gaps in coverage' },
+  { val: 'fairness', label: 'Unfair distribution of undesirable shifts' },
+  { val: 'advance', label: 'Not enough advance notice of schedule' },
+  { val: 'software', label: 'Scheduling software is inadequate' },
+  { val: 'complexity', label: 'Too complex for schedulers to manage' },
+  { val: 'other', label: 'Other (describe below)' }
+];
+
+var SUPPORT_OPTIONS = [
+  { val: '5', label: 'Strongly support' },
+  { val: '4', label: 'Somewhat support' },
+  { val: '3', label: 'Neutral' },
+  { val: '2', label: 'Somewhat oppose' },
+  { val: '1', label: 'Strongly oppose' }
+];
+
+var Q7_ITEMS = [
+  { key: 'hpr_loss', label: 'Loss of monthly HPRs' },
+  { key: 'life_plan', label: 'Inability to plan around life events' },
+  { key: 'block_trade', label: 'Difficulty trading 7-day blocks' },
+  { key: 'vacation', label: 'Vacation flexibility reduction' },
+  { key: 'wlb', label: 'Impact on work-life balance' },
+  { key: 'aca', label: 'ACA / supplemental shift elimination' },
+  { key: 'couples', label: 'Couples/family scheduling conflicts' },
+  { key: 'weekend', label: 'Weekend coverage inflexibility' }
+];
+
+var Q8_OPTIONS = [
+  { val: 'stay_same', label: 'Continue as nocturnist at current FTE — no change' },
+  { val: 'stay_reluctant', label: 'Continue but with significant dissatisfaction' },
+  { val: 'reduce', label: 'Reduce FTE or shift to hybrid days/nights' },
+  { val: 'leave_nights', label: 'Transition to day shifts / leave nocturnist program' },
+  { val: 'leave_group', label: 'Consider leaving the group entirely' }
+];
+
+var Q9_OPTIONS = [
+  { val: 'none', label: 'Not acceptable under any terms' },
+  { val: 'hpr_retain', label: 'Retaining some HPRs (even if reduced)' },
+  { val: 'shorter_blocks', label: 'Shorter planning blocks (quarterly instead of annual)' },
+  { val: 'trade_friendly', label: 'Flexible trade/swap system for blocks' },
+  { val: 'vacation_preserve', label: 'Preserved vacation flexibility' },
+  { val: 'couple_accommodation', label: 'Couples scheduling accommodation' },
+  { val: 'fte_variation', label: 'Different templates for different FTE levels' },
+  { val: 'trial_period', label: 'Trial period with option to revert' },
+  { val: 'compensation', label: 'Additional compensation for reduced flexibility' }
+];
+
+var Q10_OPTIONS = [
+  { val: 'no_problem', label: 'No — current system works fine' },
+  { val: 'minor', label: 'Minor issues — tweaks needed, not overhaul' },
+  { val: 'moderate', label: 'Moderate issues — meaningful change needed' },
+  { val: 'major', label: 'Major issues — significant restructuring warranted' }
+];
+
+var Q12_OPTIONS = [
+  { val: '3', label: '3 months (quarterly)' },
+  { val: '4', label: '4 months (trimester)' },
+  { val: '6', label: '6 months (semi-annual)' },
+  { val: 'none', label: 'None — oppose block templates' }
+];
+
+var Q14_OPTIONS = [
+  { val: 'none', label: 'No concerns' },
+  { val: 'complexity', label: 'Too complex to manage' },
+  { val: 'fairness', label: 'Team assignments may be unfair' },
+  { val: 'coverage', label: "Doesn't guarantee enough coverage" },
+  { val: 'still_rigid', label: 'Still too rigid / template-like' },
+  { val: 'tech', label: "Requires technology that doesn't exist yet" }
+];
+
+var Q16_OPTIONS = [
+  { val: 'offramp', label: 'Built-in off-ramp / group vote to continue' },
+  { val: 'gradual', label: 'Gradual reduction of HPRs (not abrupt)' },
+  { val: 'data', label: 'Data-driven decisions at each phase' },
+  { val: 'none', label: 'None — still oppose any template transition' }
+];
+
+var Q18_MODELS = [
+  { key: 'current', label: 'Current system (no changes)' },
+  { key: '7on10off', label: '7-on/10-off annual template (as proposed)' },
+  { key: 'block', label: 'Model A — Block Template (quarterly)' },
+  { key: 'team', label: 'Model B — Team-Based Self-Scheduling' },
+  { key: 'graduated', label: 'Model C — Graduated Transition' }
+];
+
+var Q19_PRIORITIES = [
+  { key: 'flexibility', label: 'Flexibility (ability to adjust month-to-month)' },
+  { key: 'predictability', label: 'Predictability (knowing schedule far in advance)' },
+  { key: 'fairness', label: 'Fairness (equitable distribution of shifts)' },
+  { key: 'coverage', label: 'Coverage (maximizing nocturnist-covered nights)' },
+  { key: 'autonomy', label: 'Autonomy (physician control over own schedule)' }
+];
+
+// ─── STATE ───
+var currentScreen = 1;
+var state = {
+  physician: '',
+  fte: '',
+  fteOther: null,
+  couple: '',
+  q1: '', q2: '', q3: '', q4: '',
+  q5: [], q5_other: '',
+  q6: '',
+  q7: {},
+  q8: '',
+  q9: [],
+  q10: '',
+  q11: '', q12: '',
+  q13: '', q14: [],
+  q15: '', q16: '',
+  q17: '',
+  q18: {},
+  q19: {},
+  q20: '',
+  q21: ''
+};
+
+// ─── AUTO-SUBMIT ───
+async function submitToGoogleSheet(source, version, respondentId, base64Payload) {
+  if (typeof APPS_SCRIPT_URL === 'undefined' || !APPS_SCRIPT_URL || APPS_SCRIPT_URL === "") {
+    console.warn("APPS_SCRIPT_URL not configured — skipping auto-submit");
+    return { status: "skipped", message: "No endpoint configured" };
+  }
+  var body = {
+    source: source,
+    version: version,
+    timestamp: new Date().toISOString(),
+    respondentId: respondentId,
+    payload: base64Payload
+  };
+  try {
+    await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify(body),
+      mode: "no-cors"
+    });
+    return { status: "ok" };
+  } catch (error) {
+    console.error("Auto-submit failed:", error);
+    return { status: "error", message: error.message };
+  }
+}
+
+// ─── HELPERS ───
+function buildRadioGroup(containerId, options, stateKey) {
+  var container = document.getElementById(containerId);
+  options.forEach(function(opt) {
+    var div = document.createElement('div');
+    div.className = 'opt-card';
+    div.innerHTML = '<div class="radio"></div><div><div class="opt-label">' + opt.label + '</div></div>';
+    div.addEventListener('click', function() {
+      state[stateKey] = opt.val;
+      container.querySelectorAll('.opt-card').forEach(function(c) { c.classList.remove('selected'); });
+      div.classList.add('selected');
+    });
+    container.appendChild(div);
+  });
+}
+
+function buildCheckboxGroup(containerId, options, stateKey) {
+  var container = document.getElementById(containerId);
+  options.forEach(function(opt) {
+    var div = document.createElement('div');
+    div.className = 'opt-card';
+    div.innerHTML = '<div class="checkbox"></div><div><div class="opt-label">' + opt.label + '</div></div>';
+    div.addEventListener('click', function() {
+      var idx = state[stateKey].indexOf(opt.val);
+      if (idx >= 0) {
+        state[stateKey].splice(idx, 1);
+        div.classList.remove('selected');
+      } else {
+        state[stateKey].push(opt.val);
+        div.classList.add('selected');
+      }
+    });
+    container.appendChild(div);
+  });
+}
+
+function buildRankGroup(containerId, items, stateKey) {
+  var container = document.getElementById(containerId);
+  items.forEach(function(item) {
+    var row = document.createElement('div');
+    row.className = 'rank-row';
+    var sel = document.createElement('select');
+    sel.innerHTML = '<option value="">—</option>';
+    for (var i = 1; i <= items.length; i++) {
+      sel.innerHTML += '<option value="' + i + '">' + i + '</option>';
+    }
+    sel.addEventListener('change', function() {
+      state[stateKey][item.key] = sel.value;
+    });
+    var label = document.createElement('span');
+    label.className = 'rank-label';
+    label.textContent = item.label;
+    row.appendChild(sel);
+    row.appendChild(label);
+    container.appendChild(row);
+  });
+}
+
+function buildLikertTable() {
+  var tbody = document.getElementById('q7Body');
+  Q7_ITEMS.forEach(function(item) {
+    var tr = document.createElement('tr');
+    var td0 = document.createElement('td');
+    td0.textContent = item.label;
+    tr.appendChild(td0);
+    for (var v = 1; v <= 5; v++) {
+      var td = document.createElement('td');
+      var radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'q7_' + item.key;
+      radio.value = v;
+      (function(key, val) {
+        radio.addEventListener('change', function() { state.q7[key] = val; });
+      })(item.key, String(v));
+      td.appendChild(radio);
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function buildSatRow() {
+  var container = document.getElementById('q20Row');
+  for (var i = 1; i <= 10; i++) {
+    var btn = document.createElement('button');
+    btn.className = 'sat-btn';
+    btn.textContent = i;
+    btn.type = 'button';
+    (function(val) {
+      btn.addEventListener('click', function() {
+        state.q20 = String(val);
+        container.querySelectorAll('.sat-btn').forEach(function(b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      });
+    })(i);
+    container.appendChild(btn);
+  }
+}
+
+// ─── SCREEN NAVIGATION ───
+function goScreen(n) {
+  currentScreen = n;
+  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById('screen' + n).classList.add('active');
+  window.scrollTo(0, 0);
+  updateProgress();
+  if (n === 6) buildReview();
+}
+
+function updateProgress() {
+  var wrap = document.getElementById('progressWrap');
+  wrap.style.display = currentScreen > 1 ? 'block' : 'none';
+  var steps = document.getElementById('progressSteps');
+  steps.innerHTML = '';
+  var labels = ['Info', 'Current', 'Template', 'Alternatives', 'Rankings', 'Review'];
+  for (var i = 1; i <= TOTAL_SCREENS; i++) {
+    var div = document.createElement('div');
+    div.className = 'progress-step' + (i < currentScreen ? ' done' : (i === currentScreen ? ' active' : ''));
+    steps.appendChild(div);
+  }
+  document.getElementById('progressLabel').textContent = labels[currentScreen - 1] + ' (' + currentScreen + ' of ' + TOTAL_SCREENS + ')';
+}
+
+// ─── BUILD REVIEW ───
+function buildReview() {
+  var html = '';
+
+  // Demographics
+  html += '<div class="review-section"><div class="section-head"><h3>Respondent Info</h3><span class="edit-link" onclick="goScreen(1)">Edit</span></div>';
+  html += reviewRow('Name', state.physician || '—');
+  var fteDisplay = state.fte === 'other' ? (state.fteOther || '—') : (state.fte || '—');
+  html += reviewRow('FTE', fteDisplay);
+  html += reviewRow('Couple', state.couple || '—');
+  html += '</div>';
+
+  // Current system
+  html += '<div class="review-section"><div class="section-head"><h3>Current System</h3><span class="edit-link" onclick="goScreen(2)">Edit</span></div>';
+  var q1Label = Q1_OPTIONS.find(function(o) { return o.val === state.q1; });
+  html += reviewRow('Satisfaction', q1Label ? q1Label.label : '—');
+  html += reviewRow('HPRs used/month', state.q2 || '—');
+  html += reviewRow('LPRs used/month', state.q3 || '—');
+  var q4Label = Q4_OPTIONS.find(function(o) { return o.val === state.q4; });
+  html += reviewRow('Vacation days', q4Label ? q4Label.label : '—');
+  html += reviewRow('Problems', state.q5.length ? state.q5.join(', ') : '—');
+  html += '</div>';
+
+  // Template
+  html += '<div class="review-section"><div class="section-head"><h3>7-on/10-off Template</h3><span class="edit-link" onclick="goScreen(3)">Edit</span></div>';
+  var q6Label = SUPPORT_OPTIONS.find(function(o) { return o.val === state.q6; });
+  html += reviewRow('Support level', q6Label ? q6Label.label : '—');
+  var q8Label = Q8_OPTIONS.find(function(o) { return o.val === state.q8; });
+  html += reviewRow('If implemented', q8Label ? q8Label.label : '—');
+  html += reviewRow('Acceptable if', state.q9.length ? state.q9.join(', ') : '—');
+  var q10Label = Q10_OPTIONS.find(function(o) { return o.val === state.q10; });
+  html += reviewRow('Problem exists?', q10Label ? q10Label.label : '—');
+  html += '</div>';
+
+  // Alternatives
+  html += '<div class="review-section"><div class="section-head"><h3>Alternatives</h3><span class="edit-link" onclick="goScreen(4)">Edit</span></div>';
+  var q11L = SUPPORT_OPTIONS.find(function(o) { return o.val === state.q11; });
+  html += reviewRow('Block Template', q11L ? q11L.label : '—');
+  var q13L = SUPPORT_OPTIONS.find(function(o) { return o.val === state.q13; });
+  html += reviewRow('Team Self-Schedule', q13L ? q13L.label : '—');
+  var q15L = SUPPORT_OPTIONS.find(function(o) { return o.val === state.q15; });
+  html += reviewRow('Graduated', q15L ? q15L.label : '—');
+  var q17L = SUPPORT_OPTIONS.find(function(o) { return o.val === state.q17; });
+  html += reviewRow('Enhanced Status Quo', q17L ? q17L.label : '—');
+  html += '</div>';
+
+  // Rankings
+  html += '<div class="review-section"><div class="section-head"><h3>Rankings</h3><span class="edit-link" onclick="goScreen(5)">Edit</span></div>';
+  Q18_MODELS.forEach(function(m) {
+    html += reviewRow(m.label, state.q18[m.key] || '—');
+  });
+  html += reviewRow('Job satisfaction', state.q20 ? state.q20 + '/10' : '—');
+  html += '</div>';
+
+  document.getElementById('reviewContent').innerHTML = html;
+}
+
+function reviewRow(label, value) {
+  return '<div class="review-row"><span class="rlabel">' + label + '</span><span class="rvalue">' + value + '</span></div>';
+}
+
+// ─── COLLECT DATA & SUBMIT ───
+function collectAllData() {
+  // Read values from inputs that weren't captured by events
+  state.q2 = document.getElementById('q2Val').value;
+  state.q3 = document.getElementById('q3Val').value;
+  state.q5_other = document.getElementById('q5Other').value;
+  state.q21 = document.getElementById('q21Text').value;
+  if (state.fte === 'other') state.fteOther = document.getElementById('fteOtherVal').value;
+
+  return {
+    v: 1,
+    type: 'opinion',
+    timestamp: new Date().toISOString(),
+    physician: state.physician,
+    demographics: {
+      fte: state.fte === 'other' ? state.fteOther : state.fte,
+      couple: state.couple
+    },
+    currentSystem: {
+      satisfaction: state.q1,
+      hprs_used: state.q2,
+      lprs_used: state.q3,
+      vacation_usage: state.q4,
+      problems: state.q5,
+      problems_other: state.q5_other
+    },
+    templateProposal: {
+      support_level: state.q6,
+      concerns: state.q7,
+      if_implemented: state.q8,
+      acceptable_if: state.q9,
+      problem_exists: state.q10
+    },
+    alternatives: {
+      block_template: { rating: state.q11, preferred_length: state.q12 },
+      team_self_schedule: { rating: state.q13, concerns: state.q14 },
+      graduated: { rating: state.q15, most_important: state.q16 },
+      enhanced_status_quo: { rating: state.q17 }
+    },
+    rankings: {
+      model_ranks: state.q18,
+      priority_ranks: state.q19
+    },
+    satisfaction: state.q20,
+    open_response: state.q21
+  };
+}
+
+async function submitSurvey() {
+  if (!state.physician) {
+    alert('Please select your name on the first screen.');
+    goScreen(1);
+    return;
+  }
+
+  var data = collectAllData();
+  var json = JSON.stringify(data);
+  var encoded = btoa(unescape(encodeURIComponent(json)));
+
+  // Show code
+  document.getElementById('codeBox').textContent = encoded;
+  document.getElementById('fallbackWrap').style.display = 'block';
+
+  // Build mailto
+  var subject = encodeURIComponent('Opinion Survey — ' + state.physician);
+  var body = encodeURIComponent('Opinion survey response from ' + state.physician + ':\n\n' + encoded);
+  document.getElementById('mailtoLink').href = 'mailto:' + ADMIN_EMAIL + '?subject=' + subject + '&body=' + body;
+
+  // Auto-submit
+  var statusEl = document.getElementById('submitStatus');
+  document.getElementById('btnSubmit').disabled = true;
+  document.getElementById('btnSubmit').textContent = 'Submitting...';
+
+  if (typeof APPS_SCRIPT_URL !== 'undefined' && APPS_SCRIPT_URL && APPS_SCRIPT_URL !== "") {
+    var result = await submitToGoogleSheet("opinions", "1.0", state.physician || "anonymous", encoded);
+    if (result.status === "ok") {
+      statusEl.innerHTML = '<div class="submit-status-ok">Auto-submitted successfully. Your response has been recorded.</div>';
+    } else {
+      statusEl.innerHTML = '<div class="submit-status-fallback">Auto-submit may not have succeeded. Please use the backup code below to submit manually.</div>';
+    }
+  } else {
+    statusEl.innerHTML = '<div class="submit-status-fallback">Auto-submit not configured. Please copy the code below and send it to the scheduling committee.</div>';
+  }
+
+  document.getElementById('btnSubmit').textContent = 'Submitted';
+
+  // Save to localStorage
+  localStorage.setItem('nocturnist_opinion_draft', json);
+}
+
+function copyCode() {
+  var text = document.getElementById('codeBox').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    document.getElementById('copiedMsg').innerHTML = '<div class="copied-msg">Copied to clipboard</div>';
+  });
+}
+
+// ─── INIT ───
+function init() {
+  // Physician dropdown
+  var sel = document.getElementById('physicianSelect');
+  PHYSICIANS.forEach(function(name) {
+    var opt = document.createElement('option');
+    opt.value = name; opt.textContent = name;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', function() {
+    state.physician = this.value;
+    document.getElementById('btnStart').disabled = !this.value;
+  });
+  document.getElementById('btnStart').addEventListener('click', function() { goScreen(2); });
+
+  // FTE options
+  var fteContainer = document.getElementById('fteOptions');
+  FTE_OPTIONS.forEach(function(opt) {
+    var div = document.createElement('div');
+    div.className = 'opt-card';
+    div.innerHTML = '<div class="radio"></div><div><div class="opt-label">' + opt.label + '</div></div>';
+    div.addEventListener('click', function() {
+      state.fte = opt.val;
+      fteContainer.querySelectorAll('.opt-card').forEach(function(c) { c.classList.remove('selected'); });
+      div.classList.add('selected');
+      document.getElementById('fteOtherWrap').style.display = opt.val === 'other' ? 'block' : 'none';
+    });
+    fteContainer.appendChild(div);
+  });
+
+  // Couple options
+  var coupleContainer = document.getElementById('coupleOptions');
+  [{ val: 'yes', label: 'Yes' }, { val: 'no', label: 'No' }].forEach(function(opt) {
+    var div = document.createElement('div');
+    div.className = 'opt-card';
+    div.innerHTML = '<div class="radio"></div><div><div class="opt-label">' + opt.label + '</div></div>';
+    div.addEventListener('click', function() {
+      state.couple = opt.val;
+      coupleContainer.querySelectorAll('.opt-card').forEach(function(c) { c.classList.remove('selected'); });
+      div.classList.add('selected');
+    });
+    coupleContainer.appendChild(div);
+  });
+
+  // Screen 2: Current system
+  buildRadioGroup('q1Options', Q1_OPTIONS, 'q1');
+  buildRadioGroup('q4Options', Q4_OPTIONS, 'q4');
+  buildCheckboxGroup('q5Options', Q5_OPTIONS, 'q5');
+
+  // Screen 3: Template proposal
+  buildRadioGroup('q6Options', SUPPORT_OPTIONS, 'q6');
+  buildLikertTable();
+  buildRadioGroup('q8Options', Q8_OPTIONS, 'q8');
+  buildCheckboxGroup('q9Options', Q9_OPTIONS, 'q9');
+  buildRadioGroup('q10Options', Q10_OPTIONS, 'q10');
+
+  // Screen 4: Alternatives
+  buildRadioGroup('q11Options', SUPPORT_OPTIONS, 'q11');
+  buildRadioGroup('q12Options', Q12_OPTIONS, 'q12');
+  buildRadioGroup('q13Options', SUPPORT_OPTIONS, 'q13');
+  buildCheckboxGroup('q14Options', Q14_OPTIONS, 'q14');
+  buildRadioGroup('q15Options', SUPPORT_OPTIONS, 'q15');
+  buildRadioGroup('q16Options', Q16_OPTIONS, 'q16');
+  buildRadioGroup('q17Options', SUPPORT_OPTIONS, 'q17');
+
+  // Screen 5: Rankings
+  buildRankGroup('q18Ranks', Q18_MODELS, 'q18');
+  buildRankGroup('q19Ranks', Q19_PRIORITIES, 'q19');
+  buildSatRow();
+
+  // Load draft
+  var draft = localStorage.getItem('nocturnist_opinion_draft');
+  if (draft) {
+    try {
+      var d = JSON.parse(draft);
+      if (d.physician) {
+        sel.value = d.physician;
+        state.physician = d.physician;
+        document.getElementById('btnStart').disabled = false;
+      }
+    } catch(e) {}
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
