@@ -26,7 +26,8 @@ const PROBLEM_LABELS = {
 };
 const Q5_LABELS = {
   none: 'No problems', gaps: 'Coverage gaps', fairness: 'Unfair distribution',
-  advance: 'Late notice', software: 'Bad software', complexity: 'Too complex', other: 'Other',
+  advance: 'Late notice', aca_wlb: 'ACA disrupting WLB', complexity: 'Too complex', other: 'Other',
+  software: 'Bad software',
 };
 const Q9_LABELS = {
   none: 'Not acceptable', hpr_retain: 'Retain HPRs', shorter_blocks: 'Shorter blocks',

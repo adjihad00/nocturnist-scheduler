@@ -219,18 +219,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
       <div class="field">
         <label class="field-label">In a typical month, how many of your 10 High Priority Requests do you actually use?</label>
-        <div class="inline-num">
-          <input type="number" id="q2Val" min="0" max="10" placeholder="0-10">
-          <span class="unit">out of 10 available</span>
-        </div>
+        <div class="sat-row" id="q2Row"></div>
       </div>
 
       <div class="field">
         <label class="field-label">How many of your 3 Low Priority Requests do you typically use per month?</label>
-        <div class="inline-num">
-          <input type="number" id="q3Val" min="0" max="3" placeholder="0-3">
-          <span class="unit">out of 3 available</span>
-        </div>
+        <div class="sat-row" id="q3Row"></div>
       </div>
 
       <div class="field">
@@ -275,7 +269,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
                 <th>Slightly</th>
                 <th>Moderate</th>
                 <th>Very</th>
-                <th>Critical</th>
+                <th>Extremely</th>
               </tr>
             </thead>
             <tbody id="q7Body"></tbody>
@@ -340,17 +334,17 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
 
       <!-- Model B -->
       <div class="model-card">
-        <h4>Model B: Team-Based Self-Scheduling</h4>
+        <h4>Model B: Nocturnist Team-Based Scheduling</h4>
         <div class="tag-row">
           <span class="model-tag tag-blue">Team Structure</span>
-          <span class="model-tag tag-green">Self-Schedule</span>
+          <span class="model-tag tag-green">Preference-Driven</span>
           <span class="model-tag tag-yellow">Coverage Guaranteed</span>
         </div>
         <ul>
-          <li>Nocturnists divided into staggered teams for coverage</li>
-          <li>Each team has a template slot; self-schedule into your assigned slots</li>
-          <li>Trades/swaps managed within and across teams</li>
-          <li>Generalist coverage built around nocturnist template</li>
+          <li>Every night shift is templated</li>
+          <li>Nocturnists become responsible for a pool of templates equivalent to their FTE total</li>
+          <li>Those shifts are assigned to the nocturnist pool, and a schedule is generated based on each individual's provided preferences and requests</li>
+          <li>This would be done in advance of the generalist schedule requests for a given period</li>
         </ul>
       </div>
       <div class="field">
@@ -375,7 +369,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
         </div>
         <ul>
           <li><strong style="color:var(--text)">Phase 1 (Mo 1-3):</strong> Current system maintained. Software upgraded. HPRs 10 → 8.</li>
-          <li><strong style="color:var(--text)">Phase 2 (Mo 4-6):</strong> 1 anchor block/quarter. Self-schedule the rest. HPRs at 6.</li>
+          <li><strong style="color:var(--text)">Phase 2 (Mo 4-6):</strong> 1 anchor block/quarter. Typical-schedule the rest. HPRs at 6.</li>
           <li><strong style="color:var(--text)">Phase 3 (Mo 7-9):</strong> 2 anchor blocks/quarter. HPRs at 4. Coverage review.</li>
           <li><strong style="color:var(--text)">Phase 4 (Mo 10-12):</strong> Full assessment. Group votes to continue, hold, or revert.</li>
           <li>Built-in off-ramp: group can halt at any phase</li>
@@ -397,15 +391,13 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent)}
         <h4>Model D: Enhanced Status Quo (No Template)</h4>
         <div class="tag-row">
           <span class="model-tag tag-green">Current System</span>
-          <span class="model-tag tag-blue">Software Upgrade</span>
-          <span class="model-tag tag-yellow">Coverage Incentives</span>
+          <span class="model-tag tag-blue">Early Publication</span>
+          <span class="model-tag tag-yellow">Request-Based</span>
         </div>
         <ul>
-          <li>Keep current self-scheduling with HPRs and vacation intact</li>
-          <li>Invest in better scheduling software</li>
-          <li>Nocturnist schedule published earlier</li>
-          <li>Add coverage incentives for hard-to-fill shifts</li>
-          <li>Algorithm-assisted schedule optimization</li>
+          <li>Keep typical scheduling via scheduler with HPRs and vacation intact</li>
+          <li>Nocturnists submit requests and their schedule is published in advance of the generalist schedule</li>
+          <li>Generalist pool formalized for gap coverage</li>
         </ul>
       </div>
       <div class="field">
@@ -531,7 +523,7 @@ var Q5_OPTIONS = [
   { val: 'gaps', label: 'Too many unfilled gaps in coverage' },
   { val: 'fairness', label: 'Unfair distribution of undesirable shifts' },
   { val: 'advance', label: 'Not enough advance notice of schedule' },
-  { val: 'software', label: 'Scheduling software is inadequate' },
+  { val: 'aca_wlb', label: 'ACA disrupting work/life balance' },
   { val: 'complexity', label: 'Too complex for schedulers to manage' },
   { val: 'other', label: 'Other (describe below)' }
 ];
@@ -550,7 +542,7 @@ var Q7_ITEMS = [
   { key: 'block_trade', label: 'Difficulty trading 7-day blocks' },
   { key: 'vacation', label: 'Vacation flexibility reduction' },
   { key: 'wlb', label: 'Impact on work-life balance' },
-  { key: 'aca', label: 'ACA / supplemental shift elimination' },
+  { key: 'aca', label: 'ACA' },
   { key: 'couples', label: 'Couples/family scheduling conflicts' },
   { key: 'weekend', label: 'Weekend coverage inflexibility' }
 ];
@@ -799,6 +791,24 @@ function buildLikertTable() {
   });
 }
 
+function buildNumButtons(containerId, min, max, stateKey) {
+  var container = document.getElementById(containerId);
+  for (var i = min; i <= max; i++) {
+    (function(val) {
+      var btn = document.createElement('button');
+      btn.className = 'sat-btn';
+      btn.textContent = val;
+      btn.type = 'button';
+      btn.addEventListener('click', function() {
+        state[stateKey] = String(val);
+        container.querySelectorAll('.sat-btn').forEach(function(b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      });
+      container.appendChild(btn);
+    })(i);
+  }
+}
+
 function buildSatRow() {
   var container = document.getElementById('q20Row');
   for (var i = 1; i <= 10; i++) {
@@ -904,9 +914,7 @@ function reviewRow(label, value) {
 
 // ─── COLLECT DATA & SUBMIT ───
 function collectAllData() {
-  // Read values from inputs that weren't captured by events
-  state.q2 = document.getElementById('q2Val').value;
-  state.q3 = document.getElementById('q3Val').value;
+  // q2 and q3 are captured by button click events
   state.q5_other = document.getElementById('q5Other').value;
   state.q21 = document.getElementById('q21Text').value;
   if (state.fte === 'other') state.fteOther = document.getElementById('fteOtherVal').value;
@@ -1045,6 +1053,8 @@ function init() {
 
   // Screen 2: Current system
   buildRadioGroup('q1Options', Q1_OPTIONS, 'q1');
+  buildNumButtons('q2Row', 0, 10, 'q2');
+  buildNumButtons('q3Row', 0, 3, 'q3');
   buildRadioGroup('q4Options', Q4_OPTIONS, 'q4');
   buildCheckboxGroup('q5Options', Q5_OPTIONS, 'q5');
 
