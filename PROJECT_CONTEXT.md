@@ -21,7 +21,7 @@ All AI responses on this project must follow `/RESPONSE_CONTRACT.md` in the repo
 
 | Parameter | Value |
 |-----------|-------|
-| Total nocturnists | 19 (all full-time, FTE adjustments coming later) |
+| Total nocturnists | 20 (all full-time, FTE adjustments coming later) |
 | Target nights/year | 156 |
 | Shift length | 10 hours |
 | Nocturnist-nights/year | 2,964 |
@@ -76,6 +76,7 @@ Each physician is assigned to 2-3 hospitals (one exception: Mulji at 100% LCH). 
 | 17 | Moore | GRMH 40% | HMH 30% | LCH 30% | |
 | 18 | Nagy | OMH 40% | BEH 30% | GRMH 30% | |
 | 19 | Pitts | GMH 40% | OMH 30% | LCH 30% | |
+| 20 | Cromer | TBD | | | |
 
 ---
 

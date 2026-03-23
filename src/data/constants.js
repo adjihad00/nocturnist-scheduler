@@ -9,7 +9,7 @@ export const HOSPITALS = [
 ];
 
 export const TOTAL_NEED = HOSPITALS.reduce((s, h) => s + h.need, 0);
-export const TOTAL_MDS = 19;
+export const TOTAL_MDS = 20;
 export const TARGET_NIGHTS = 156;
 export const DAYS_YEAR = 365;
 
@@ -96,6 +96,7 @@ export const PHYSICIANS = [
   { name: 'Moore',    sites: { GRMH: 40, HMH: 30, LCH: 30 } },
   { name: 'Nagy',     sites: { OMH: 40, BEH: 30, GRMH: 30 } },
   { name: 'Pitts',    sites: { GMH: 40, OMH: 30, LCH: 30 } },
+  { name: 'Cromer',   sites: {} },
 ];
 
 export const START_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
