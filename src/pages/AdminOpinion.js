@@ -465,6 +465,8 @@ export default function AdminOpinion() {
             </button>
             <button style={{ ...s.btn, ...s.btnSecondary }} onClick={exportJSON} disabled={!responses.length}>Export JSON</button>
             <button style={{ ...s.btn, ...s.btnSecondary }} onClick={exportCSV} disabled={!responses.length}>Export CSV</button>
+            <Link to="/admin/opinions/print" target="_blank" style={{ ...s.btn, ...s.btnSecondary, textDecoration: 'none', display: 'inline-block' }}>Print Aggregate</Link>
+            <Link to="/admin/opinions/print-responses" target="_blank" style={{ ...s.btn, ...s.btnSecondary, textDecoration: 'none', display: 'inline-block' }}>Print Responses</Link>
             <button style={{ ...s.btn, ...s.btnDanger }} onClick={clearAll} disabled={!responses.length}>Clear All</button>
           </div>
           <textarea
