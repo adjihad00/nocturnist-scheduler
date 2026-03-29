@@ -327,7 +327,8 @@ export default function AdminPreferences() {
       'FTE','Shifts/Month',
       'Imp: Nights On','Imp: Days Off','Imp: Max Consecutive','Imp: Min Recovery',
       'Least Desired Day','Most Desired Day','Start Rank','End Rank',
-      'Hospital 1','Hospital 2','Hospital 3','Alternate',
+      'Hospital 1','Hospital 1 %','Hospital 2','Hospital 2 %','Hospital 3','Hospital 3 %','Alternate',
+      ...HOSPITALS.map(h => `Commute ${h.name} (min)`),
       'Holiday 1','Holiday 2','Holiday 3',
       'Blackout Dates','Scheduling Notes','Family Obligations',
       'Swap Willingness','Motivator Rank',
@@ -350,7 +351,11 @@ export default function AdminPreferences() {
         IMP_LABELS[r.block?.importance?.max_consecutive] || '', IMP_LABELS[r.block?.importance?.min_recovery] || '',
         r.days?.least_desired, r.days?.most_desired,
         r.times?.start_rank?.join(' > '), r.times?.end_rank?.join(' > '),
-        r.locations?.top3?.[0], r.locations?.top3?.[1], r.locations?.top3?.[2], r.locations?.alternate,
+        r.locations?.top3?.[0], r.locations?.percentages?.[r.locations?.top3?.[0]] != null ? r.locations.percentages[r.locations.top3[0]] + '%' : '',
+        r.locations?.top3?.[1], r.locations?.percentages?.[r.locations?.top3?.[1]] != null ? r.locations.percentages[r.locations.top3[1]] + '%' : '',
+        r.locations?.top3?.[2], r.locations?.percentages?.[r.locations?.top3?.[2]] != null ? r.locations.percentages[r.locations.top3[2]] + '%' : '',
+        r.locations?.alternate,
+        ...HOSPITALS.map(h => r.locations?.commute_minutes?.[h.name] != null ? r.locations.commute_minutes[h.name] : ''),
         r.holidays?.top3?.[0], r.holidays?.top3?.[1], r.holidays?.top3?.[2],
         r.availability?.blackout_ranges?.length
           ? r.availability.blackout_ranges.map(range => `${range.start || '?'}-${range.end || '?'}${range.label ? ' (' + range.label + ')' : ''}`).join('; ')
